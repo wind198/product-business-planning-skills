@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workflow",
+    "phase",
+    "status",
+    "active_tasks",
+    "blocked_by",
+    "needs_review",
+    "next_action"
+  ],
+  "properties": {
+    "workflow": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "in_progress",
+        "blocked",
+        "review",
+        "ready",
+        "approved"
+      ]
+    },
+    "active_tasks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocked_by": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "needs_review": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_action": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "status",
+    "alternatives",
+    "source_refs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^DEC-[0-9]{3,}$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "accepted",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "tradeoffs"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "tradeoffs": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "preferred": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "authorized_by": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "affected_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

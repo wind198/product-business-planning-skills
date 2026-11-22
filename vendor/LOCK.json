@@ -1,0 +1,107 @@
+{
+  "sources": {
+    "pm-skills": {
+      "repository": "phuryn/pm-skills",
+      "commit": "9af7bfd0bc47fdad43c2eaa7a43cd13918e7aaef",
+      "license_sha256": "a2c922f9b81b4f40347ddfa79c38eda0f1278b5a6d108bd4099b4da254c774ee"
+    }
+  },
+  "skills": {
+    "idea-generation": {
+      "upstream_path": "pm-product-discovery/skills/brainstorm-ideas-new/SKILL.md",
+      "sha256": "400e5e0760d6dc52bfe34953d90db6223df532ce720d7e85568696ab5c3d34d2"
+    },
+    "problem-validation": {
+      "upstream_path": "pm-product-discovery/skills/identify-assumptions-new/SKILL.md",
+      "sha256": "962b1e0c01e45ceb930e4d806c0ffb05e36cf25dcfef5497e7828d89d6ae474b"
+    },
+    "experiment-design": {
+      "upstream_path": "pm-product-discovery/skills/brainstorm-experiments-new/SKILL.md",
+      "sha256": "fe66d9ba76cf6b0e156298c88f752d8e1e62549fe77a7c01c0a74d8679da9334"
+    },
+    "opportunity-tree": {
+      "upstream_path": "pm-product-discovery/skills/opportunity-solution-tree/SKILL.md",
+      "sha256": "6b23e44a5ace86aa20d64cc130322265ace6a53a29831cc403b974098a379bcc"
+    },
+    "interview-script": {
+      "upstream_path": "pm-product-discovery/skills/interview-script/SKILL.md",
+      "sha256": "892ca53da9852d4e6516d2305f0c0eb2db370bf39693c6c6797154b44bec9b4c"
+    },
+    "interview-synthesis": {
+      "upstream_path": "pm-product-discovery/skills/summarize-interview/SKILL.md",
+      "sha256": "5a2a0c8257f5e2f7ef098d4531acbbcd3087bb07bb87d4cabfe1a97ef1ad037c"
+    },
+    "market-segments": {
+      "upstream_path": "pm-market-research/skills/market-segments/SKILL.md",
+      "sha256": "f8425da0486d844a661fe18f809de1e055d7125c74ed423ee750cf2be74a2319"
+    },
+    "competitor-analysis": {
+      "upstream_path": "pm-market-research/skills/competitor-analysis/SKILL.md",
+      "sha256": "8e627fc7fba96f223ad9f8fd23c6033a429cc28f9e9ce2d672854c6851810c2b"
+    },
+    "market-sizing": {
+      "upstream_path": "pm-market-research/skills/market-sizing/SKILL.md",
+      "sha256": "96d1250ba0ab7e5b64c9be8278f63f9661b510237e423b42ef70ab914184faf8"
+    },
+    "ideal-customer-profile": {
+      "upstream_path": "pm-go-to-market/skills/ideal-customer-profile/SKILL.md",
+      "sha256": "8d434df786db2290efb575f1d219c7e19650e7a7e3df9a5f4b82b0bd0d2ce298"
+    },
+    "business-model": {
+      "upstream_path": "pm-product-strategy/skills/business-model/SKILL.md",
+      "sha256": "515621fd8a41ecba5b7234d0d9e1e50185ba33805c4dd170b66364281f84acc8"
+    },
+    "lean-canvas": {
+      "upstream_path": "pm-product-strategy/skills/lean-canvas/SKILL.md",
+      "sha256": "5bafe7a33cf57631937fa863ebc6c3d3b0679808a6e5b5fa04b70be615fbc240"
+    },
+    "value-proposition": {
+      "upstream_path": "pm-product-strategy/skills/value-proposition/SKILL.md",
+      "sha256": "b07cc0399582fc178be31b513b313d2420c7941dd568b52a0bf6cfb0ab6c4ec7"
+    },
+    "product-strategy": {
+      "upstream_path": "pm-product-strategy/skills/product-strategy/SKILL.md",
+      "sha256": "50d4bfe62ae71a321271a491148e8dca4715a6a7550f82ffba2ded06f036d5b8"
+    },
+    "pricing-strategy": {
+      "upstream_path": "pm-product-strategy/skills/pricing-strategy/SKILL.md",
+      "sha256": "09321c5984f3654077bd58921ec4b7235f47e00caf44445bd2e5a5ed13bcb895"
+    },
+    "monetization": {
+      "upstream_path": "pm-product-strategy/skills/monetization-strategy/SKILL.md",
+      "sha256": "2306d3c987e9572258fa1327a864049965dda3e4e873093482c6b671d686eea5"
+    },
+    "feature-prioritization": {
+      "upstream_path": "pm-product-discovery/skills/prioritize-features/SKILL.md",
+      "sha256": "d05c001ea9d71ccf6aca975e0530a2a85545192b1eec9e06cc6d1339156c0f87"
+    },
+    "prd": {
+      "upstream_path": "pm-execution/skills/create-prd/SKILL.md",
+      "sha256": "e3aa10a437ed7f748a957bd5d1eb06d8fa3f56dc728dcb93ce484387ecc3fa13"
+    },
+    "user-stories": {
+      "upstream_path": "pm-execution/skills/user-stories/SKILL.md",
+      "sha256": "8ce89cd81de5a3df7d504380d18c54cec6c59ccdb7fd18cbcb62b6b6183d0a55"
+    },
+    "outcome-roadmap": {
+      "upstream_path": "pm-execution/skills/outcome-roadmap/SKILL.md",
+      "sha256": "3d2da8f82f4cbe4c8d06593765e2fbb94913676e9a65663b7da9e53c9a0082c8"
+    },
+    "gtm-strategy": {
+      "upstream_path": "pm-go-to-market/skills/gtm-strategy/SKILL.md",
+      "sha256": "4b12597b63de4794c04faf226d996857370843681ab07f4b28d64a9d431a0ff7"
+    },
+    "gtm-motions": {
+      "upstream_path": "pm-go-to-market/skills/gtm-motions/SKILL.md",
+      "sha256": "b26db17f9eee4f04aa3d53bf3c393da0574a3fa54d59eb7427e0cf5edf2377c3"
+    },
+    "positioning": {
+      "upstream_path": "pm-marketing-growth/skills/positioning-ideas/SKILL.md",
+      "sha256": "8864f284e66c8bb106c46dc5e51656a47ae4792e39091eb3a49f63cde00c3850"
+    },
+    "marketing-ideas": {
+      "upstream_path": "pm-marketing-growth/skills/marketing-ideas/SKILL.md",
+      "sha256": "83242a3a8f5feae768820fee5ae8f4b6b4f7eaf12c8a450c49b134995bd76a89"
+    }
+  }
+}

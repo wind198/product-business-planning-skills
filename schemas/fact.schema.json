@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "key",
+    "value",
+    "status",
+    "scope",
+    "revision",
+    "source",
+    "history"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^FACT-[0-9]{3,}$"
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "value": {},
+    "status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "observed",
+        "proposed",
+        "hypothesis",
+        "assumed",
+        "disputed",
+        "unknown",
+        "superseded"
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "project"
+      ],
+      "properties": {
+        "project": {
+          "type": "string",
+          "minLength": 1
+        },
+        "market": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "release": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "type",
+        "ref"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retrieved_at": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "revision",
+          "value",
+          "source"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "value": {},
+          "source": {
+            "type": "object",
+            "required": [
+              "type",
+              "ref"
+            ],
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "retrieved_at": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "affects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

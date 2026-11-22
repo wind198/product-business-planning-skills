@@ -1,0 +1,8 @@
+current_focus: project_intake
+completed: []
+known_keys: []
+open_questions: []
+next_actions:
+  - identify_business_pain
+  - inspect_existing_sources
+last_source_revision: null

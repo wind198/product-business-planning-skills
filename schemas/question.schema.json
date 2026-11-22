@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "key",
+    "question",
+    "status",
+    "reason"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^Q-[0-9]{3,}$"
+    },
+    "key": {
+      "type": "string"
+    },
+    "question": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "open",
+        "answered",
+        "deferred",
+        "superseded"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "fact_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

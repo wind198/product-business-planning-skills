@@ -1,0 +1,7 @@
+workflow: idea-to-mvp
+phase: discovery
+status: in_progress
+active_tasks: []
+blocked_by: []
+needs_review: []
+next_action: inspect_prior_knowledge_and_sources

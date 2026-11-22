@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "statement",
+    "status",
+    "experiment_refs",
+    "source_refs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^HYP-[0-9]{3,}$"
+    },
+    "statement": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "testing",
+        "supported",
+        "unsupported",
+        "inconclusive",
+        "superseded"
+      ]
+    },
+    "segment_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "experiment_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "confidence": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "unknown"
+      ]
+    }
+  }
+}

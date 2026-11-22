@@ -1,0 +1,104 @@
+sources:
+- id: pm-skills
+  repository: phuryn/pm-skills
+  commit: 9af7bfd0bc47fdad43c2eaa7a43cd13918e7aaef
+  license: MIT
+  license_path: LICENSE
+  note: Only selected upstream skills are installed; original source text stays unchanged.
+skills:
+- id: idea-generation
+  source: pm-skills
+  path: pm-product-discovery/skills/brainstorm-ideas-new/SKILL.md
+  purpose: Generate alternative product concepts
+- id: problem-validation
+  source: pm-skills
+  path: pm-product-discovery/skills/identify-assumptions-new/SKILL.md
+  purpose: Identify risks and assumptions for new products
+- id: experiment-design
+  source: pm-skills
+  path: pm-product-discovery/skills/brainstorm-experiments-new/SKILL.md
+  purpose: Design low-cost validation experiments
+- id: opportunity-tree
+  source: pm-skills
+  path: pm-product-discovery/skills/opportunity-solution-tree/SKILL.md
+  purpose: Map opportunities to solution hypotheses
+- id: interview-script
+  source: pm-skills
+  path: pm-product-discovery/skills/interview-script/SKILL.md
+  purpose: Prepare customer discovery conversations
+- id: interview-synthesis
+  source: pm-skills
+  path: pm-product-discovery/skills/summarize-interview/SKILL.md
+  purpose: Synthesize qualitative research with provenance
+- id: market-segments
+  source: pm-skills
+  path: pm-market-research/skills/market-segments/SKILL.md
+  purpose: Segment potential customers
+- id: competitor-analysis
+  source: pm-skills
+  path: pm-market-research/skills/competitor-analysis/SKILL.md
+  purpose: Compare competitive alternatives
+- id: market-sizing
+  source: pm-skills
+  path: pm-market-research/skills/market-sizing/SKILL.md
+  purpose: Structure TAM/SAM/SOM assumptions
+- id: ideal-customer-profile
+  source: pm-skills
+  path: pm-go-to-market/skills/ideal-customer-profile/SKILL.md
+  purpose: Define the target buying customer
+- id: business-model
+  source: pm-skills
+  path: pm-product-strategy/skills/business-model/SKILL.md
+  purpose: Business Model Canvas
+- id: lean-canvas
+  source: pm-skills
+  path: pm-product-strategy/skills/lean-canvas/SKILL.md
+  purpose: Startup assumptions canvas
+- id: value-proposition
+  source: pm-skills
+  path: pm-product-strategy/skills/value-proposition/SKILL.md
+  purpose: Connect customer jobs to value
+- id: product-strategy
+  source: pm-skills
+  path: pm-product-strategy/skills/product-strategy/SKILL.md
+  purpose: Overall product positioning and strategy
+- id: pricing-strategy
+  source: pm-skills
+  path: pm-product-strategy/skills/pricing-strategy/SKILL.md
+  purpose: Pricing alternatives and willingness-to-pay
+- id: monetization
+  source: pm-skills
+  path: pm-product-strategy/skills/monetization-strategy/SKILL.md
+  purpose: Revenue model alternatives
+- id: feature-prioritization
+  source: pm-skills
+  path: pm-product-discovery/skills/prioritize-features/SKILL.md
+  purpose: Prioritize validated opportunities
+- id: prd
+  source: pm-skills
+  path: pm-execution/skills/create-prd/SKILL.md
+  purpose: Lean product requirements
+- id: user-stories
+  source: pm-skills
+  path: pm-execution/skills/user-stories/SKILL.md
+  purpose: Define observable user behavior and acceptance criteria
+- id: outcome-roadmap
+  source: pm-skills
+  path: pm-execution/skills/outcome-roadmap/SKILL.md
+  purpose: Outcome-oriented roadmap
+- id: gtm-strategy
+  source: pm-skills
+  path: pm-go-to-market/skills/gtm-strategy/SKILL.md
+  purpose: Go-to-market plans and metrics
+- id: gtm-motions
+  source: pm-skills
+  path: pm-go-to-market/skills/gtm-motions/SKILL.md
+  purpose: Compare distribution mechanisms
+- id: positioning
+  source: pm-skills
+  path: pm-marketing-growth/skills/positioning-ideas/SKILL.md
+  purpose: Alternative product positioning
+- id: marketing-ideas
+  source: pm-skills
+  path: pm-marketing-growth/skills/marketing-ideas/SKILL.md
+  purpose: Campaign and channel brainstorming
