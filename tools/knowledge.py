@@ -53,6 +53,8 @@ def write(workspace,obj,path,action):
     with (workspace/'history'/'events.jsonl').open('a') as f:f.write(json.dumps(event,ensure_ascii=False)+'\n')
 
 def put(workspace,args,project):
+    from reconciler import reconcile
+    reconcile(workspace)
     if not KEY.fullmatch(args.key):raise ValueError('invalid canonical key')
     target=scope_for(project,args.market,args.release)
     matches=[(p,f) for p,f in facts(workspace) if f['key']==args.key and f['scope']==target and f['status']!='superseded']
@@ -75,6 +77,7 @@ def put(workspace,args,project):
         path=workspace/'knowledge'/'facts'/f'{newid}.yaml'
         action='created'
     write(workspace,obj,path,action)
+    reconcile(workspace, origin=getattr(args, 'origin', 'automation'))
     print(json.dumps({'action':action,'fact':obj,'review_required':obj.get('affects',[])},indent=2))
 
 def validate_workspace(workspace):

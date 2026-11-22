@@ -30,6 +30,18 @@ Choose from existing/human-readable fact keys, or select **Other key**. Existing
 
 `python tools/interactive.py --help` lists all commands. The non-interactive `tools/knowledge.py` interface remains available for agents/CI. This CLI handles persistent knowledge, not autonomous product research or document synthesis.
 
+## Direct edits and agent notifications
+
+Users normally enter information through `make start` / `make fact PROJECT=name`, but can edit `work/<project>/knowledge/**/*.yaml` or JSON files directly.
+
+- `make changes PROJECT=name`: reconcile on-disk records and list pending review events.
+- `make watch PROJECT=name`: optional live monitoring using watchdog. **No daemon is required**; every CLI session and agent resume performs a fresh scan, detecting edits made while offline.
+- `state/knowledge-snapshot.json`: prior validated records for meaningful comparison. Bootstrap for an existing project establishes a baseline (historical edits before bootstrap cannot be reconstructed).
+- `history/knowledge-changes.jsonl`: append-only event queue recording file and field changes, origin, validation issues and known affected IDs.
+- `state/agent-reviewed.json`: event IDs acknowledged **only after agent review** with `python tools/reconciler.py --workspace work/name ack EVENT_ID`.
+
+Invalid edits are logged without overwriting the last validated snapshot. Changing an existing `confirmed` value in YAML is **not automatic new evidence or approval**; the agent must review its provenance and update dependent reports. Reconciliation does not invoke an AI backend.
+
 ## Deliverables
 
 | Artifact | Purpose | Templates |

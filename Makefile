@@ -6,7 +6,7 @@ WORKSPACE ?= $(OUTPUT)/$(PROJECT)
 PLATFORM ?= unspecified
 
 .DEFAULT_GOAL := help
-.PHONY: help start install test check new status validate schema-check vendor vendor-check resolve fact propose override
+.PHONY: help start install test check new status validate schema-check vendor vendor-check resolve fact propose override changes watch
 
 help:
 	@echo 'Product & Business Planning Skills'
@@ -21,6 +21,8 @@ help:
 	@echo '  make new PROJECT=name                Create project without prompts'
 	@echo '  make validate PROJECT=name           Validate project YAML'
 	@echo '  make check                           Run offline checks'
+	@echo '  make changes PROJECT=name           Scan and show pending agent-review events'
+	@echo '  make watch PROJECT=name             Watch external YAML/JSON file edits'
 	@echo '  python tools/interactive.py --help   Full CLI help'
 
 start:
@@ -54,3 +56,9 @@ test:
 	$(PYTHON) -m unittest discover -s tests -v
 
 check: vendor-check schema-check test
+
+changes:
+	$(PYTHON) tools/reconciler.py --workspace '$(WORKSPACE)' pending
+
+watch:
+	$(PYTHON) tools/reconciler.py --workspace '$(WORKSPACE)' watch

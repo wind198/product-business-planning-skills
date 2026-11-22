@@ -32,3 +32,7 @@ Human acceptance is necessary for material commercial commitments and product la
 ## Interactive terminal
 
 Recommend `make start` as the human-facing entry point for project selection, guided capture and corrections. The menu handles project knowledge only; it does not replace agent-led market research, opportunity discovery or plan authoring. Avoid asking the user to type canonical knowledge keys, source references, or raw YAML.
+
+## Required reconciliation before agent work
+
+Start or resume by running `python tools/reconciler.py --workspace <project> pending`; this scans the live YAML/JSON knowledge and lists all events awaiting review. Examine each event's before/after values, provenance requirements, validation error, and explicit `affected_ids`. Do not equate an external edit of a confirmed record with verified evidence. Reconcile decisions and update potentially stale documents before acknowledging an event with `... ack <event_id>`. Never acknowledge without processing. This queue is the durable handoff between CLI/direct file editing and agent orchestration; CLI does not invoke the agent.

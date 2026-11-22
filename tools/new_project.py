@@ -31,6 +31,8 @@ def main():
     project.write_text(yaml.safe_dump(data,sort_keys=False))
     for f in (ROOT/'templates').glob('*.md'):
         shutil.copy2(f,target/'documents'/f.name)
+    from reconciler import reconcile
+    reconcile(target)
     print(target)
 
 if __name__=='__main__':main()

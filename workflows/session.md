@@ -1,6 +1,7 @@
 # Incremental session and resume protocol
 
-1. Open `state/workflow.yaml`, `state/checkpoint.yaml`, `knowledge/` and active artifact. Load only related evidence (hot/warm/cold context).
+1. Run `python tools/reconciler.py --workspace <project> pending` to scan for direct file changes and collect outstanding agent-review events. Invalid files must be corrected; changed confirmed values require provenance review before reliance. Process affected analyses and documents, then acknowledge event IDs with `... ack <id>`.
+2. Open `state/workflow.yaml`, `state/checkpoint.yaml`, `knowledge/` and active artifact. Load only related evidence (hot/warm/cold context).
 2. Resolve canonical keys and previous answers; deduplicate semantically before asking. The CLI handles exact keys only; the agent handles synonyms.
 3. Select narrow upstream skill(s) through `upstream/skills.yaml`. If not installed, run `make vendor` if network permits; do not claim to have executed an absent skill.
 4. Investigate existing MVP repositories at pinned commit and record findings in `investigations/` as AS-IS evidence; do not confuse implementation with running deployment.

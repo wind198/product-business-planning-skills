@@ -15,6 +15,7 @@ from rich.console import Console
 from rich.table import Table
 
 from knowledge import facts, put, read, resolve, scope_for
+from reconciler import reconcile, pending
 
 ROOT = Path(__file__).resolve().parents[1]
 app = typer.Typer(help="Interactive product knowledge and project planning.", no_args_is_help=True)
@@ -101,13 +102,14 @@ def persist(workspace: Path, key: str, value: str, mode: str) -> None:
             return
     args = SimpleNamespace(
         key=key, value=value, status=status, source_ref=timestamp(),
-        override=previous is not None, market=None, release=None,
+        override=previous is not None, market=None, release=None, origin="cli",
     )
     put(workspace, args, read(workspace / "project.yaml")["project"])
 
 
 def focused(action: str, project: str, output: Path) -> None:
     workspace = workspace_for(project, output)
+    reconcile(workspace)
     key = pick_key(workspace)
     if key is None:
         return
@@ -176,6 +178,7 @@ def next_question(workspace: Path) -> None:
 
 
 def dashboard(workspace: Path) -> None:
+    reconcile(workspace)
     table = Table(title=f"Known information · {workspace.name}")
     table.add_column("Key")
     table.add_column("Value")
@@ -189,6 +192,10 @@ def dashboard(workspace: Path) -> None:
 
 def summary(workspace: Path) -> None:
     """Brief snapshot of collected ground truth before the next action."""
+    changes = reconcile(workspace)
+    console.print(f"[dim]Knowledge changes awaiting agent review: {changes['pending']}[/dim]")
+    if changes["invalid"]:
+        console.print(f"[yellow]Invalid knowledge files: {len(changes['invalid'])}; fix before relying on them.[/yellow]")
     entries = [item for _, item in facts(workspace) if item["status"] != "superseded"]
     confirmed = [item for item in entries if item["status"] == "confirmed"]
     proposed = [item for item in entries if item["status"] in ("proposed", "hypothesis")]
@@ -216,8 +223,8 @@ def start(output: Path = typer.Option(Path("./work"), help="Project workspaces d
         summary(current)
         choice = questionary.select(
             f"{current.name} — what next?",
-            choices=["Continue discovery", "Review answers", "Add or correct fact",
-                     "Propose an idea", "Find an answer", "Switch project", "Exit"],
+            choices=["Continue discovery", "Review answers", "Review knowledge changes",
+                     "Add or correct fact", "Propose an idea", "Find an answer", "Switch project", "Exit"],
         ).ask()
         if choice in (None, "Exit"):
             break
@@ -227,6 +234,16 @@ def start(output: Path = typer.Option(Path("./work"), help="Project workspaces d
             next_question(current)
         elif choice == "Review answers":
             dashboard(current)
+        elif choice == "Review knowledge changes":
+            reconcile(current)
+            changes = pending(current)
+            if not changes:
+                console.print("No changes awaiting agent review.")
+            for item in changes[-15:]:
+                console.print(f"  {item['type']} · {item['path']} · {', '.join(item['changed_fields']) or 'file'}")
+                if "validation_error" in item:
+                    console.print(f"    [yellow]{item['validation_error']}[/yellow]")
+            console.print("[dim]Changes are acknowledged by the agent only after review.[/dim]")
         else:
             action = {"Add or correct fact": "fact", "Propose an idea": "propose",
                       "Find an answer": "resolve"}[choice]
