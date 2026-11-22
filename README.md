@@ -8,21 +8,27 @@ Domain methodologies are selected from [Paweł Huryn's open-source PM Skills](ht
 
 Read `skills/planning-orchestrator/SKILL.md` and `workflows/session.md` to drive the agent. Until `make vendor` succeeds, the catalog is a manifest of upstream sources; it is **not** a local copy of their instructions.
 
-## Quick start
+## Quick start — Typer + Questionary CLI
+
+The CLI uses [Typer](https://typer.tiangolo.com/) (the framework behind FastAPI CLI's command layer) and [Questionary](https://github.com/tmbo/questionary) (interactive selection, text, confirmation). No custom terminal prompt engine or menu-selection parser is maintained.
 
 ```bash
 make install
-make vendor                 # downloads pinned upstream source, requires network
-make new PROJECT=coffee-shop PLATFORM=web
-make status PROJECT=coffee-shop
-make resolve PROJECT=coffee-shop KEY=product.primary_problem
-make fact PROJECT=coffee-shop KEY=product.primary_problem VALUE='Customers cannot find quiet work spaces' REF=interview-001
-make propose PROJECT=coffee-shop KEY=product.customer_segment VALUE='Remote professionals' REF=agent-analysis-001
-make validate PROJECT=coffee-shop
-make test
+make start
 ```
 
-`PROJECT` defaults to `demo-product`; project folders are created under `./work`. Project workspaces are separate from this reusable framework. Before asking a question, **resolve existing answers** and check questions/proposals and sources. Confirmation only comes from an explicit user or authoritative source; an agent can propose customer segments, pricing models, features, GTM channels and business model alternatives without requesting blank-form answers.
+Keep the short Make commands and project name; prompts handle keys and values:
+
+```bash
+make fact PROJECT=coffee-shop
+make resolve PROJECT=coffee-shop
+make propose PROJECT=coffee-shop
+make override PROJECT=coffee-shop
+```
+
+Choose from existing/human-readable fact keys, or select **Other key**. Existing confirmed answers are reused and can only change after confirmation, with preserved revision history. Missing core intake questions are optional; skipping does not block product planning.
+
+`python tools/interactive.py --help` lists all commands. The non-interactive `tools/knowledge.py` interface remains available for agents/CI. This CLI handles persistent knowledge, not autonomous product research or document synthesis.
 
 ## Deliverables
 

@@ -1,3 +1,5 @@
 PyYAML>=6.0,<7
 jsonschema>=4.21,<5
 pytest>=8,<10
+typer>=0.15,<1
+questionary>=2,<3

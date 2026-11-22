@@ -4,28 +4,30 @@ PROJECT ?= demo-product
 OUTPUT ?= ./work
 WORKSPACE ?= $(OUTPUT)/$(PROJECT)
 PLATFORM ?= unspecified
-KEY ?=
-VALUE ?=
-REF ?=
 
 .DEFAULT_GOAL := help
-.PHONY: help install test check new status validate schema-check vendor vendor-check resolve fact propose override
+.PHONY: help start install test check new status validate schema-check vendor vendor-check resolve fact propose override
 
 help:
 	@echo 'Product & Business Planning Skills'
-	@echo '  make install                       Install dependencies'
-	@echo '  make vendor                        Install selected pinned upstream skills (online)'
-	@echo '  make vendor-check                  Verify upstream catalog structure'
-	@echo '  make new PROJECT=name              Create a persistent product workspace'
-	@echo '  make status PROJECT=name           Show current workflow/checkpoint'
-	@echo '  make resolve PROJECT=name KEY=x.y  Reuse known answer'
-	@echo '  make fact PROJECT=name KEY=x.y VALUE=... REF=...'
-	@echo '  make propose PROJECT=name KEY=x.y VALUE=... REF=...'
-	@echo '  make override PROJECT=name KEY=x.y VALUE=... REF=...'
-	@echo '  make validate PROJECT=name         Check YAML project state'
-	@echo '  make schema-check                  Check framework templates/schema'
-	@echo '  make test                          Run Python tests'
-	@echo '  make check                         Run offline checks and tests'
+	@echo '  make start                           Guided project menu (Typer + Questionary)'
+	@echo '  make fact PROJECT=name               Select key and enter answer'
+	@echo '  make resolve PROJECT=name            Select key and view saved answer'
+	@echo '  make propose PROJECT=name            Select key and propose value'
+	@echo '  make override PROJECT=name           Confirm an answer correction'
+	@echo '  make install                         Install dependencies'
+	@echo '  make vendor                          Install pinned upstream skills (online)'
+	@echo '  make vendor-check                    Validate upstream catalog'
+	@echo '  make new PROJECT=name                Create project without prompts'
+	@echo '  make validate PROJECT=name           Validate project YAML'
+	@echo '  make check                           Run offline checks'
+	@echo '  python tools/interactive.py --help   Full CLI help'
+
+start:
+	$(PYTHON) tools/interactive.py start --output '$(OUTPUT)'
+
+resolve fact propose override:
+	$(PYTHON) tools/interactive.py $@ --project '$(PROJECT)' --output '$(OUTPUT)'
 
 install:
 	$(PIP) install -r requirements-dev.txt
@@ -41,14 +43,6 @@ new:
 
 status:
 	$(PYTHON) tools/knowledge.py --workspace '$(WORKSPACE)' status
-
-resolve:
-	@test -n '$(KEY)' || (echo 'Required: KEY=canonical.key' >&2; exit 2)
-	$(PYTHON) tools/knowledge.py --workspace '$(WORKSPACE)' resolve '$(KEY)'
-
-fact propose override:
-	@test -n '$(KEY)' && test -n '$(VALUE)' && test -n '$(REF)' || (echo 'Required: KEY=... VALUE=... REF=...' >&2; exit 2)
-	$(PYTHON) tools/knowledge.py --workspace '$(WORKSPACE)' put --key '$(KEY)' --value '$(VALUE)' --source-ref '$(REF)' $(if $(filter propose,$@),--status proposed,--status confirmed) $(if $(filter override,$@),--override,)
 
 validate:
 	$(PYTHON) tools/knowledge.py --workspace '$(WORKSPACE)' validate
