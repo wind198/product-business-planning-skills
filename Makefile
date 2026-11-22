@@ -6,12 +6,13 @@ WORKSPACE ?= $(OUTPUT)/$(PROJECT)
 PLATFORM ?= unspecified
 
 .DEFAULT_GOAL := help
-.PHONY: help start install test check new status validate schema-check vendor vendor-check resolve fact propose override
+.PHONY: help start discover install test check new status validate schema-check vendor vendor-check resolve fact propose override
 
 help:
 	@echo 'Product & Business Planning Skills'
-	@echo '  make start                           Guided project menu (Typer + Questionary)'
-	@echo '  make fact PROJECT=name               Select key and enter answer'
+	@echo '  make start                           Project menu + persistent guided discovery'
+	@echo '  make discover PROJECT=name           Continuous discovery with input status list
+	@echo '  make fact PROJECT=name               Select key and enter answer''
 	@echo '  make resolve PROJECT=name            Select key and view saved answer'
 	@echo '  make propose PROJECT=name            Select key and propose value'
 	@echo '  make override PROJECT=name           Confirm an answer correction'
@@ -26,7 +27,7 @@ help:
 start:
 	$(PYTHON) tools/interactive.py start --output '$(OUTPUT)'
 
-resolve fact propose override:
+resolve fact propose override discover:
 	$(PYTHON) tools/interactive.py $@ --project '$(PROJECT)' --output '$(OUTPUT)'
 
 install:

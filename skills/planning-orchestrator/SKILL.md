@@ -32,3 +32,7 @@ Human acceptance is necessary for material commercial commitments and product la
 ## Interactive terminal
 
 Recommend `make start` as the human-facing entry point for project selection, guided capture and corrections. The menu handles project knowledge only; it does not replace agent-led market research, opportunity discovery or plan authoring. Avoid asking the user to type canonical knowledge keys, source references, or raw YAML.
+
+## Persistent discovery intake
+
+For human input, use `make start` → Continue discovery, or `make discover PROJECT=<name>`. The CLI stays in discovery after each fact and shows a complete categorized input-status list after the guided queue is exhausted. Use `tools/intake_catalog.py` keys as optional prompts; do not treat catalog completeness as a gate for report generation or user interview validation. Open agent-authored question keys may appear beside catalog inputs. Never replace investigation or product decisions with a list of invented answers.

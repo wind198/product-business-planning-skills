@@ -20,15 +20,24 @@ make start
 Keep the short Make commands and project name; prompts handle keys and values:
 
 ```bash
+make discover PROJECT=coffee-shop
 make fact PROJECT=coffee-shop
 make resolve PROJECT=coffee-shop
 make propose PROJECT=coffee-shop
 make override PROJECT=coffee-shop
 ```
 
-Choose from existing/human-readable fact keys, or select **Other key**. Existing confirmed answers are reused and can only change after confirmation, with preserved revision history. Missing core intake questions are optional; skipping does not block product planning.
+Choose from existing/human-readable fact keys, or select **Other key**. Existing confirmed answers are reused and can only change after confirmation, with preserved revision history. **Continue discovery stays in the discovery workspace**: answers are saved and the next unanswered question is asked immediately. When no further guided question is available, a full, editable status list is shown rather than returning to the project menu. Use **Exit discovery** to return explicitly. Deferred inputs remain unresolved and can be revisited; directly edited YAML is reflected when the status view reloads.
 
 `python tools/interactive.py --help` lists all commands. The non-interactive `tools/knowledge.py` interface remains available for agents/CI. This CLI handles persistent knowledge, not autonomous product research or document synthesis.
+
+## Continuous product discovery
+
+The CLI uses a declarative `tools/intake_catalog.py` organized around **idea/problem, market/customers, business model, MVP/requirements, pricing/validation, and GTM/roadmap**. These fields are optional context prompts, **not** a fixed report form or proof of validation.
+
+`make start` → **Continue discovery**, or `make discover PROJECT=coffee-shop`, begins guided collection. After saving or deferring a response, discovery advances to the next unanswered item **without returning to the main menu**. After all inputs are recorded/deferred, the **full list remains open**, showing saved values and statuses (`confirmed`, `proposed`, `deferred`, `unanswered`). Select any row to correct or supply data; only **Exit discovery** ends the session. `/skip` or an empty answer defers a field, and deferrals are kept in `state/checkpoint.yaml`.
+
+Existing raw fact commands, proposal protection, source provenance, and revision history remain unchanged. Agent-driven research, prioritization, report drafting, and validation remain responsibilities of the planning orchestrator.
 
 ## Deliverables
 

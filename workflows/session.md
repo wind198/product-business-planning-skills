@@ -13,3 +13,7 @@ Context budget: hot = current task/checkpoint; warm = relevant facts/decisions; 
 ## Terminal workspace entry point
 
 Human users should run `make start`, not memorize canonical keys or source IDs. The interactive CLI writes ordinary user-provided facts and checkpoints, asks one essential question at a time and reuses previous answers. Do not treat its small intake as the entire product discovery process: the AI agent must investigate, propose, and synthesize as described above. Agent/CI tooling may continue using the exact-key knowledge CLI directly.
+
+## Continuous CLI intake
+
+`make discover PROJECT=<name>` captures product/business facts one at a time, automatically advances to the next unanswered input and always leaves a full editable status list available. Deferrals are recorded separately from accepted facts. Only the explicit Exit discovery action leaves this workflow. The agent remains responsible for deciding which gaps matter, collecting evidence, and producing reports; all catalog fields are optional and cannot become mandatory completion gates.
