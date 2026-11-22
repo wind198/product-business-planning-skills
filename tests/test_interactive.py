@@ -45,6 +45,19 @@ class InteractiveTests(unittest.TestCase):
             self.assertEqual(2, record["revision"])
             self.assertEqual("Old", record["history"][0]["value"])
 
+    def test_accept_existing_proposal_with_same_value(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run([sys.executable, str(ROOT / "tools/new_project.py"), "--name", "p", "--output", tmp], check=True, capture_output=True)
+            ws = Path(tmp) / "p"
+            subprocess.run([sys.executable, str(ROOT / "tools/knowledge.py"), "--workspace", str(ws),
+                            "put", "--key", "product.target_customer", "--value", "Founders",
+                            "--status", "proposed", "--source-ref", "agent-001"], check=True, capture_output=True)
+            with contextlib.redirect_stdout(io.StringIO()):
+                save_answer(ws, "product.target_customer", "Founders", self.responses("y"))
+            fact = current_fact(ws, "product.target_customer")
+            self.assertEqual("confirmed", fact["status"])
+            self.assertEqual(2, fact["revision"])
+
     def test_defer_avoids_reasking(self):
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp)
