@@ -186,11 +186,34 @@ def dashboard(workspace: Path) -> None:
     console.print(table)
 
 
+
+def summary(workspace: Path) -> None:
+    """Brief snapshot of collected ground truth before the next action."""
+    entries = [item for _, item in facts(workspace) if item["status"] != "superseded"]
+    confirmed = [item for item in entries if item["status"] == "confirmed"]
+    proposed = [item for item in entries if item["status"] in ("proposed", "hypothesis")]
+    checkpoint = read(workspace / "state" / "checkpoint.yaml")
+    deferred = set(checkpoint.get("deferred_keys", []))
+    missing = [key for key in CORE_KEYS if key not in deferred and known(workspace, key) is None]
+
+    console.print(f"\n[bold]{workspace.name}[/bold] — {len(confirmed)} confirmed, "
+                  f"{len(proposed)} proposed, {len(missing)} core intake gaps")
+    for item in confirmed[:4]:
+        label = FIELDS.get(item["key"], item["key"])
+        value = str(item["value"]).replace("\n", " ")
+        console.print(f"  • {label}: {value[:90]}{'…' if len(value) > 90 else ''}")
+    if len(confirmed) > 4:
+        console.print(f"  …and {len(confirmed) - 4} more confirmed facts")
+    if missing:
+        console.print("  [dim]Still unknown:[/dim] " + ", ".join(FIELDS[key] for key in missing))
+
+
 @app.command()
 def start(output: Path = typer.Option(Path("./work"), help="Project workspaces directory")) -> None:
     """Open the guided project workspace."""
     current = project_picker(output)
     while current is not None:
+        summary(current)
         choice = questionary.select(
             f"{current.name} — what next?",
             choices=["Continue discovery", "Review answers", "Add or correct fact",
