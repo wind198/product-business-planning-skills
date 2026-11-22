@@ -84,13 +84,15 @@ def reconcile(workspace, origin="external_edit"):
     errors = {name: entry["error"] for name, entry in current.items() if "error" in entry}
     if prior is None:
         # No historical comparison is possible for pre-existing workspaces.
-        save_json(filename, {"version": 1, "files": {k: v for k, v in current.items() if "data" in v}})
+        save_json(filename, {"version": 1, "generation": 0, "files": {k: v for k, v in current.items() if "data" in v}})
         return {"initialized": True, "new_events": 0, "invalid": errors, "pending": len(pending(workspace))}
 
     previous = prior["files"]
     updated = dict(previous)
     recorded = {item["id"] for item in journal(workspace)}
     created = []
+    changed = False
+    generation = prior.get("generation", 0)
     for name in sorted(set(previous) | set(current)):
         before, after = previous.get(name), current.get(name)
         if after and "error" in after:
@@ -109,9 +111,10 @@ def reconcile(workspace, origin="external_edit"):
             updated[name] = after
             continue
 
+        changed = True
         old = before.get("data") if before else None
         new = after.get("data") if after and "data" in after else None
-        fingerprint = json.dumps([name, before["hash"] if before else None,
+        fingerprint = json.dumps([generation, name, before["hash"] if before else None,
                                   after["hash"] if after else None, change])
         identifier = hashlib.sha256(fingerprint.encode()).hexdigest()[:24]
         if identifier in recorded:
@@ -137,7 +140,7 @@ def reconcile(workspace, origin="external_edit"):
         with dest.open("a", encoding="utf-8") as out:
             for event in created:
                 out.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
-    save_json(filename, {"version": 1, "files": updated})
+    save_json(filename, {"version": 1, "generation": generation + int(changed), "files": updated})
     return {"initialized": False, "new_events": len(created),
             "invalid": errors, "pending": len(pending(workspace))}
 
