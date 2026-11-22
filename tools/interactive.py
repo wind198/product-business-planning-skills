@@ -109,7 +109,10 @@ def persist(workspace: Path, key: str, value: str, mode: str) -> None:
 
 def focused(action: str, project: str, output: Path) -> None:
     workspace = workspace_for(project, output)
-    reconcile(workspace)
+    result = reconcile(workspace)
+    if result["invalid"]:
+        console.print("[yellow]Please fix invalid knowledge files before editing facts. Review knowledge changes for details.[/yellow]")
+        return
     key = pick_key(workspace)
     if key is None:
         return
@@ -161,6 +164,9 @@ def project_picker(output: Path) -> Path | None:
 
 
 def next_question(workspace: Path) -> None:
+    if reconcile(workspace)["invalid"]:
+        console.print("[yellow]Fix invalid knowledge files before continuing discovery.[/yellow]")
+        return
     checkpoint_path = workspace / "state" / "checkpoint.yaml"
     checkpoint = read(checkpoint_path)
     deferred = set(checkpoint.get("deferred_keys", []))
@@ -178,7 +184,9 @@ def next_question(workspace: Path) -> None:
 
 
 def dashboard(workspace: Path) -> None:
-    reconcile(workspace)
+    if reconcile(workspace)["invalid"]:
+        console.print("[yellow]Invalid knowledge files detected. Review changes and repair them first.[/yellow]")
+        return
     table = Table(title=f"Known information · {workspace.name}")
     table.add_column("Key")
     table.add_column("Value")
@@ -196,6 +204,9 @@ def summary(workspace: Path) -> None:
     console.print(f"[dim]Knowledge changes awaiting agent review: {changes['pending']}[/dim]")
     if changes["invalid"]:
         console.print(f"[yellow]Invalid knowledge files: {len(changes['invalid'])}; fix before relying on them.[/yellow]")
+    if changes["invalid"]:
+        console.print("[dim]Known fact overview is unavailable until invalid knowledge is repaired.[/dim]")
+        return
     entries = [item for _, item in facts(workspace) if item["status"] != "superseded"]
     confirmed = [item for item in entries if item["status"] == "confirmed"]
     proposed = [item for item in entries if item["status"] in ("proposed", "hypothesis")]
