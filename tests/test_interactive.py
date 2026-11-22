@@ -41,12 +41,12 @@ class InteractiveTests(unittest.TestCase):
             self.assertIn(command, result.output)
 
     def test_prompted_fact_and_lookup(self):
-        with patch("interactive.questionary.select", return_value=Prompt("Product idea · product.idea")), \
+        with patch("interactive.questionary.select", return_value=Prompt("product.idea")), \
              patch("interactive.questionary.text", return_value=Prompt("An online booking app")):
             result = runner.invoke(app, ["fact", "--project", "demo", "--output", self.tmp.name])
         self.assertEqual(0, result.exit_code, result.output)
         self.assertEqual("An online booking app", known(self.ws, "product.idea")["value"])
-        with patch("interactive.questionary.select", return_value=Prompt("Product idea · product.idea")):
+        with patch("interactive.questionary.select", return_value=Prompt("product.idea")):
             result = runner.invoke(app, ["resolve", "--project", "demo", "--output", self.tmp.name])
         self.assertEqual(0, result.exit_code, result.output)
         self.assertIn("An online booking app", result.output)
@@ -79,7 +79,7 @@ class InteractiveTests(unittest.TestCase):
         self.assertEqual("Bad scheduling", known(self.ws, "product.primary_problem")["value"])
 
     def test_custom_key_and_proposal_no_overwrite(self):
-        with patch("interactive.questionary.select", return_value=Prompt("Other key…")), \
+        with patch("interactive.questionary.select", return_value=Prompt("__custom__")), \
              patch("interactive.questionary.text", side_effect=[Prompt("pricing.model"), Prompt("usage-based")]):
             result = runner.invoke(app, ["propose", "--project", "demo", "--output", self.tmp.name])
         self.assertEqual(0, result.exit_code, result.output)
