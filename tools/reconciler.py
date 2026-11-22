@@ -111,7 +111,7 @@ def reconcile(workspace, origin="external_edit"):
             updated[name] = after
             continue
 
-        changed = True
+        changed = changed or change != "invalid"
         old = before.get("data") if before else None
         new = after.get("data") if after and "data" in after else None
         fingerprint = json.dumps([generation, name, before["hash"] if before else None,
