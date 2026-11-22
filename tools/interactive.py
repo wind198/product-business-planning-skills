@@ -1,306 +1,238 @@
 #!/usr/bin/env python3
-"""Guided terminal interface for project planning. No canonical keys or source IDs required."""
+"""Product planning CLI: Typer commands + Questionary prompts, no homegrown terminal UI."""
 from __future__ import annotations
 
-import argparse
-from datetime import datetime, timezone
-from pathlib import Path
 import re
 import subprocess
 import sys
+from datetime import datetime, timezone
+from pathlib import Path
 from types import SimpleNamespace
 
-import yaml
+import questionary
+import typer
+from rich.console import Console
+from rich.table import Table
 
 from knowledge import facts, put, read, resolve, scope_for
 
 ROOT = Path(__file__).resolve().parents[1]
+app = typer.Typer(help="Interactive product knowledge and project planning.", no_args_is_help=True)
+console = Console()
 
-# These are known intake concepts, not a mandatory questionnaire.
-FIELDS = [
-    ("product.idea", "Product idea", "In one or two sentences, what are you considering building?"),
-    ("product.primary_problem", "Customer pain", "What customer problem motivated this idea?"),
-    ("product.target_customer", "Target customers", "Who experiences this problem?"),
-    ("product.existing_solution", "Existing product or MVP", "What already exists (product, prototype, or code)?"),
-    ("product.constraints", "Important constraints", "Any constraints on budget, team, timing, or technology?"),
-    ("product.success_outcome", "Desired outcome", "What would make this initiative successful?"),
-]
-FIELD_MAP = {key: (name, question) for key, name, question in FIELDS}
-INITIAL_KEYS = ("product.idea", "product.primary_problem", "product.target_customer")
-
-
-def ask(message: str, input_fn=input) -> str:
-    try:
-        return input_fn(message).strip()
-    except (EOFError, KeyboardInterrupt):
-        print("\nSession ended.")
-        raise SystemExit(0)
+FIELDS = {
+    "product.idea": "Product idea",
+    "product.primary_problem": "Customer pain",
+    "product.target_customer": "Target customers",
+    "product.existing_solution": "Existing product or MVP",
+    "product.constraints": "Important constraints",
+    "product.success_outcome": "Desired outcome",
+}
+CORE_KEYS = tuple(FIELDS)[:3]
+SLUG = re.compile(r"[A-Za-z0-9_-]+")
+KEY = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
 
 
-def project_dirs(output: Path) -> list[Path]:
-    if not output.is_dir():
-        return []
-    return sorted(p for p in output.iterdir() if p.is_dir() and (p / "project.yaml").is_file())
+def timestamp() -> str:
+    return "interactive-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
 
 
-def choose(options: list[str], label: str, input_fn=input, allow_back=True):
-    print("\n" + label)
-    for i, name in enumerate(options, 1):
-        print(f"  {i}. {name}")
-    if allow_back:
-        print("  0. Back")
-    while True:
-        answer = ask("> ", input_fn)
-        if allow_back and answer in ("0", "q", "quit"):
-            return None
-        if answer.isdecimal() and 1 <= int(answer) <= len(options):
-            return int(answer) - 1
-        print("Choose a displayed number.")
+def workspace_for(project: str, output: Path) -> Path:
+    if not SLUG.fullmatch(project):
+        raise typer.BadParameter("Project must contain only letters, numbers, '-' or '_'.")
+    workspace = output.expanduser().resolve() / project
+    if not (workspace / "project.yaml").is_file():
+        raise typer.BadParameter(f"Unknown project '{project}'. Create it with 'make new PROJECT={project}' or 'make start'.")
+    return workspace
 
 
-def create_project(output: Path, input_fn=input):
-    name = ask("Project slug (letters, numbers, - or _): ", input_fn)
-    if not re.fullmatch(r"[A-Za-z0-9_-]+", name):
-        print("Invalid project name; no project created.")
-        return None
-    path = output / name
-    if path.exists():
-        print("Project already exists. Select it from the list.")
-        return None
-    outcome = subprocess.run(
-        [sys.executable, str(ROOT / "tools" / "new_project.py"),
-         "--name", name, "--output", str(output)],
-        capture_output=True, text=True, check=False,
-    )
-    if outcome.returncode:
-        print(outcome.stderr.strip() or outcome.stdout.strip())
-        return None
-    print(f"Created: {path}")
-    return path
-
-
-def select_project(output: Path, input_fn=input):
-    projects = project_dirs(output)
-    options = [f"Open {p.name}" for p in projects] + ["Create a new project"]
-    selected = choose(options, "Select your project", input_fn, allow_back=False)
-    if selected == len(projects):
-        return create_project(output, input_fn)
-    return projects[selected]
-
-
-def current_fact(workspace: Path, key: str):
+def known(workspace: Path, key: str) -> dict | None:
     project = read(workspace / "project.yaml")["project"]
     result = resolve(workspace, key, scope_for(project, None, None))
     return result["fact"] if result["found"] else None
 
 
-def save_answer(workspace: Path, key: str, value: str, input_fn=input) -> bool:
-    existing = current_fact(workspace, key)
-    if existing and existing["value"] == value and existing["status"] == "confirmed":
-        print("Already confirmed; nothing changed.")
-        return False
-    if existing:
-        print(f"Previous [{existing['status']}]: {existing['value']}")
-        confirmation = ask("Replace or confirm this answer? [y/N]: ", input_fn)
-        if confirmation.lower() not in ("y", "yes"):
-            print("Existing answer preserved.")
-            return False
-    session_id = "interactive-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-    arguments = SimpleNamespace(
-        key=key, value=value, status="confirmed", source_ref=session_id,
-        override=existing is not None, market=None, release=None,
-    )
-    project = read(workspace / "project.yaml")["project"]
-    put(workspace, arguments, project)
-    print("Saved to project knowledge.")
-    return True
-
-
-def deferred_keys(workspace: Path) -> list[str]:
-    checkpoint = read(workspace / "state" / "checkpoint.yaml")
-    return checkpoint.get("deferred_keys", [])
-
-
-def defer(workspace: Path, key: str):
-    path = workspace / "state" / "checkpoint.yaml"
-    checkpoint = read(path)
-    skipped = checkpoint.setdefault("deferred_keys", [])
-    if key not in skipped:
-        skipped.append(key)
-    path.write_text(yaml.safe_dump(checkpoint, sort_keys=False, allow_unicode=True), encoding="utf-8")
-
-
-def intake(workspace: Path, input_fn=input):
-    skipped = set(deferred_keys(workspace))
-    missing = [key for key in INITIAL_KEYS if current_fact(workspace, key) is None and key not in skipped]
-    if not missing:
-        print("\nNo essential unanswered intake questions. The planning agent can investigate and propose next steps.")
-        return
-    key = missing[0]
-    label, question = FIELD_MAP[key]
-    print(f"\nNext useful question: {label}\n{question}")
-    print("Press Enter to return, or type /skip to defer this question.")
-    response = ask("> ", input_fn)
-    if response == "/skip":
-        defer(workspace, key)
-        print("Deferred; it will not be asked again automatically.")
-    elif response:
-        save_answer(workspace, key, response, input_fn)
-    else:
-        print("No changes.")
-
-
-def show_answers(workspace: Path):
-    print("\nKnown project information")
-    rows = sorted((f for _, f in facts(workspace) if f["status"] != "superseded"), key=lambda f: f["key"])
-    if not rows:
-        print("  No recorded answers yet.")
-        return
-    for entry in rows:
-        label = FIELD_MAP.get(entry["key"], (entry["key"], ""))[0]
-        print(f"  {label}: {entry['value']} [{entry['status']}; revision {entry['revision']}]")
-
-
-def edit_answer(workspace: Path, input_fn=input):
-    names = [f"{name} — {'saved' if current_fact(workspace, key) else 'not set'}"
-             for key, name, _ in FIELDS]
-    chosen = choose(names, "Which information would you like to add or change?", input_fn)
-    if chosen is None:
-        return
-    key, name, question = FIELDS[chosen]
-    previous = current_fact(workspace, key)
-    if previous:
-        print(f"Current {name}: {previous['value']} [{previous['status']}]")
-    print(question)
-    answer = ask("New answer (Enter to cancel): ", input_fn)
-    if answer:
-        save_answer(workspace, key, answer, input_fn)
-
-
-def show_dashboard(workspace: Path):
-    state = read(workspace / "state" / "workflow.yaml")
-    recorded = sum(f["status"] == "confirmed" for _, f in facts(workspace))
-    print(f"\n=== {workspace.name} ===")
-    print(f"Workflow: {state['phase']} ({state['status']})")
-    print(f"Confirmed facts: {recorded}")
-    print(f"Next action: {state.get('next_action', 'unspecified')}")
-    print("  1. Continue discovery (one question)")
-    print("  2. Review existing answers")
-    print("  3. Add or correct information")
-    print("  4. Show document and project paths")
-    print("  5. Switch project")
-    print("  0. Exit")
-
-
-def run(output: Path, input_fn=input):
-    workspace = None
-    print("Product & Business Planning — interactive workspace")
-    while True:
-        if workspace is None:
-            workspace = select_project(output, input_fn)
-            if workspace is None:
-                continue
-        show_dashboard(workspace)
-        action = ask("> ", input_fn)
-        if action in ("0", "q", "quit"):
-            print("Project knowledge is saved on disk.")
-            return
-        if action == "1":
-            intake(workspace, input_fn)
-        elif action == "2":
-            show_answers(workspace)
-        elif action == "3":
-            edit_answer(workspace, input_fn)
-        elif action == "4":
-            print(f"Workspace: {workspace}\nDocuments: {workspace / 'documents'}\nKnowledge: {workspace / 'knowledge'}")
-        elif action == "5":
-            workspace = None
-        else:
-            print("Choose a displayed number.")
-
-
-
-def pick_key(workspace: Path, input_fn=input):
-    """Choose a known or new canonical key without requiring a CLI argument."""
-    existing = sorted({entry["key"] for _, entry in facts(workspace)
-                       if entry["status"] != "superseded"})
-    options = list(dict.fromkeys([key for key, _, _ in FIELDS] + existing))
-    names = [f"{FIELD_MAP.get(key, (key, ''))[0]} ({key})"
-             + (" [saved]" if current_fact(workspace, key) else "")
-             for key in options]
-    selected = choose(names + ["Enter another key"], "Choose information", input_fn)
-    if selected is None:
+def pick_key(workspace: Path) -> str | None:
+    existing = {item["key"] for _, item in facts(workspace) if item["status"] != "superseded"}
+    options = list(dict.fromkeys([*FIELDS, *sorted(existing)]))
+    labels = {f"{FIELDS.get(key, key)} · {key}" + (" [saved]" if key in existing else ""): key
+              for key in options}
+    labels["Other key…"] = None
+    selection = questionary.select("Which information?", choices=list(labels)).ask()
+    if selection is None:
         return None
-    if selected == len(options):
-        custom = ask("Canonical key (e.g. product.distribution_channel): ", input_fn)
-        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", custom):
-            print("Invalid key.")
+    key = labels[selection]
+    if key is None:
+        key = questionary.text("Canonical key (e.g. pricing.model):").ask()
+        if not key:
             return None
-        return custom
-    return options[selected]
+        if not KEY.fullmatch(key):
+            console.print("[red]Invalid canonical key.[/red]")
+            return None
+    return key
 
 
-def command(workspace: Path, action: str, input_fn=input):
-    """Focused interactive fact/resolve/propose/override command."""
-    if not (workspace / "project.yaml").is_file():
-        raise ValueError(f"Project not found: {workspace}. Use make new PROJECT={workspace.name} or make start.")
-    key = pick_key(workspace, input_fn)
+def show_fact(workspace: Path, key: str) -> None:
+    entry = known(workspace, key)
+    if entry is None:
+        console.print(f"No saved answer for [bold]{FIELDS.get(key, key)}[/bold].")
+        return
+    console.print(f"[bold]{FIELDS.get(key, key)}[/bold]: {entry['value']}")
+    console.print(f"Status: {entry['status']} · Revision: {entry['revision']} · Source: {entry['source']['ref']}")
+
+
+def persist(workspace: Path, key: str, value: str, mode: str) -> None:
+    previous = known(workspace, key)
+    status = "proposed" if mode == "propose" else "confirmed"
+    if previous is not None:
+        if mode == "propose":
+            console.print("[yellow]Existing knowledge preserved; proposals cannot replace it.[/yellow]")
+            return
+        if previous["value"] == value and previous["status"] == "confirmed":
+            console.print("Already confirmed; unchanged.")
+            return
+        console.print(f"Previous ({previous['status']}): {previous['value']}")
+        if not questionary.confirm("Confirm correction or acceptance?", default=False).ask():
+            console.print("No changes.")
+            return
+    args = SimpleNamespace(
+        key=key, value=value, status=status, source_ref=timestamp(),
+        override=previous is not None, market=None, release=None,
+    )
+    put(workspace, args, read(workspace / "project.yaml")["project"])
+
+
+def focused(action: str, project: str, output: Path) -> None:
+    workspace = workspace_for(project, output)
+    key = pick_key(workspace)
     if key is None:
         return
-    existing = current_fact(workspace, key)
-    label = FIELD_MAP.get(key, (key, ""))[0]
     if action == "resolve":
-        if existing:
-            print(f"\n{label}: {existing['value']} [{existing['status']}; revision {existing['revision']}]")
-            print(f"Source: {existing['source']['ref']}")
-        else:
-            print(f"\nNo answer saved for {label}.")
+        show_fact(workspace, key)
         return
-    if existing:
-        print(f"Current: {existing['value']} [{existing['status']}]")
-    value = ask(f"{label} value (Enter to cancel): ", input_fn)
-    if not value:
-        print("No changes.")
-        return
-    if action == "propose":
-        if existing:
-            print("An existing record cannot be overwritten by a proposal.")
-            return
-        source = "interactive-proposal-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-        args = SimpleNamespace(key=key, value=value, status="proposed",
-                               source_ref=source, override=False, market=None, release=None)
-        put(workspace, args, read(workspace / "project.yaml")["project"])
-        return
-    if action == "override" and existing is None:
-        print("Nothing to override; creating a confirmed answer instead.")
-    if existing and (existing["value"] != value or existing["status"] != "confirmed"):
-        if ask("Confirm replacement or acceptance? [y/N]: ", input_fn).lower() not in ("y", "yes"):
-            print("Existing answer preserved.")
-            return
-        source = "interactive-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-        args = SimpleNamespace(key=key, value=value, status="confirmed",
-                               source_ref=source, override=True, market=None, release=None)
-        put(workspace, args, read(workspace / "project.yaml")["project"])
-    else:
-        save_answer(workspace, key, value, input_fn)
+    console.print(f"Selected: [bold]{FIELDS.get(key, key)}[/bold]")
+    value = questionary.text("Value (leave empty to cancel):", default="").ask()
+    if value:
+        persist(workspace, key, value, action)
 
-def main():
-    parser = argparse.ArgumentParser(description="Interactive planning workspace; no KEY/VALUE/REF arguments needed.")
-    parser.add_argument("action", nargs="?", choices=("start", "fact", "resolve", "propose", "override"), default="start")
-    parser.add_argument("--project", help="Project slug for focused commands")
-    parser.add_argument("--output", type=Path, default=Path("./work"))
-    args = parser.parse_args()
-    if not sys.stdin.isatty():
-        parser.error("interactive commands require a terminal; use tools/knowledge.py for scripts")
-    output = args.output.expanduser().resolve()
-    if args.action == "start":
-        run(output)
-    else:
-        project = args.project or ask("Project name: ")
-        if not re.fullmatch(r"[A-Za-z0-9_-]+", project):
-            parser.error("invalid project slug")
-        command(output / project, args.action)
+
+def projects(output: Path) -> list[Path]:
+    if not output.is_dir():
+        return []
+    return sorted(p for p in output.iterdir() if p.is_dir() and (p / "project.yaml").is_file())
+
+
+def create_project(output: Path) -> Path | None:
+    name = questionary.text("New project slug:").ask()
+    if not name:
+        return None
+    if not SLUG.fullmatch(name):
+        console.print("[red]Invalid project slug.[/red]")
+        return None
+    dest = output.resolve() / name
+    if dest.exists():
+        console.print("[yellow]Project already exists.[/yellow]")
+        return None
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "new_project.py"),
+         "--name", name, "--output", str(output.resolve())],
+        capture_output=True, text=True, check=False,
+    )
+    if result.returncode:
+        console.print(f"[red]{result.stderr.strip() or result.stdout.strip()}[/red]")
+        return None
+    return dest
+
+
+def project_picker(output: Path) -> Path | None:
+    found = projects(output)
+    choices = {p.name: p for p in found}
+    choices["Create new project…"] = None
+    selection = questionary.select("Select a project", choices=list(choices)).ask()
+    if selection is None:
+        return None
+    return create_project(output) if choices[selection] is None else choices[selection]
+
+
+def next_question(workspace: Path) -> None:
+    checkpoint_path = workspace / "state" / "checkpoint.yaml"
+    checkpoint = read(checkpoint_path)
+    deferred = set(checkpoint.get("deferred_keys", []))
+    key = next((key for key in CORE_KEYS if key not in deferred and known(workspace, key) is None), None)
+    if key is None:
+        console.print("No essential unanswered intake questions. Continue research/proposals with the agent.")
+        return
+    answer = questionary.text(f"{FIELDS[key]} (optional; /skip to defer):").ask()
+    if answer == "/skip":
+        checkpoint.setdefault("deferred_keys", []).append(key)
+        import yaml
+        checkpoint_path.write_text(yaml.safe_dump(checkpoint, sort_keys=False), encoding="utf-8")
+    elif answer:
+        persist(workspace, key, answer, "fact")
+
+
+def dashboard(workspace: Path) -> None:
+    table = Table(title=f"Known information · {workspace.name}")
+    table.add_column("Key")
+    table.add_column("Value")
+    table.add_column("Status")
+    for _, item in facts(workspace):
+        if item["status"] != "superseded":
+            table.add_row(FIELDS.get(item["key"], item["key"]), str(item["value"]), item["status"])
+    console.print(table)
+
+
+@app.command()
+def start(output: Path = typer.Option(Path("./work"), help="Project workspaces directory")) -> None:
+    """Open the guided project workspace."""
+    current = project_picker(output)
+    while current is not None:
+        choice = questionary.select(
+            f"{current.name} — what next?",
+            choices=["Continue discovery", "Review answers", "Add or correct fact",
+                     "Propose an idea", "Find an answer", "Switch project", "Exit"],
+        ).ask()
+        if choice in (None, "Exit"):
+            break
+        if choice == "Switch project":
+            current = project_picker(output)
+        elif choice == "Continue discovery":
+            next_question(current)
+        elif choice == "Review answers":
+            dashboard(current)
+        else:
+            action = {"Add or correct fact": "fact", "Propose an idea": "propose",
+                      "Find an answer": "resolve"}[choice]
+            focused(action, current.name, output)
+
+
+@app.command()
+def fact(project: str = typer.Option(..., help="Existing project slug"),
+         output: Path = typer.Option(Path("./work"))) -> None:
+    """Prompt for a key and value, then persist a confirmed answer."""
+    focused("fact", project, output)
+
+
+@app.command(name="resolve")
+def resolve_fact(project: str = typer.Option(..., "--project", help="Existing project slug"),
+                 output: Path = typer.Option(Path("./work"))) -> None:
+    """Select an existing fact and show its saved answer."""
+    focused("resolve", project, output)
+
+
+@app.command()
+def propose(project: str = typer.Option(..., help="Existing project slug"),
+            output: Path = typer.Option(Path("./work"))) -> None:
+    """Prompt for an explicitly proposed value."""
+    focused("propose", project, output)
+
+
+@app.command()
+def override(project: str = typer.Option(..., help="Existing project slug"),
+             output: Path = typer.Option(Path("./work"))) -> None:
+    """Correct or accept an answer with confirmation and revision history."""
+    focused("override", project, output)
 
 
 if __name__ == "__main__":
-    main()
+    app()

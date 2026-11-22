@@ -8,14 +8,16 @@ Domain methodologies are selected from [Paweł Huryn's open-source PM Skills](ht
 
 Read `skills/planning-orchestrator/SKILL.md` and `workflows/session.md` to drive the agent. Until `make vendor` succeeds, the catalog is a manifest of upstream sources; it is **not** a local copy of their instructions.
 
-## Quick start — interactive CLI
+## Quick start — Typer + Questionary CLI
+
+The CLI uses [Typer](https://typer.tiangolo.com/) (the framework behind FastAPI CLI's command layer) and [Questionary](https://github.com/tmbo/questionary) (interactive selection, text, confirmation). No custom terminal prompt engine or menu-selection parser is maintained.
 
 ```bash
 make install
 make start
 ```
 
-For a focused action, keep the short command and project name:
+Keep the short Make commands and project name; prompts handle keys and values:
 
 ```bash
 make fact PROJECT=coffee-shop
@@ -24,13 +26,9 @@ make propose PROJECT=coffee-shop
 make override PROJECT=coffee-shop
 ```
 
-Each command opens a brief interactive prompt to select an existing or common fact key and enter its value (when needed). Source IDs are generated automatically, and changes to confirmed answers require explicit confirmation. For custom keys, choose **Enter another key**. These focused commands require a terminal; non-interactive agents should call `tools/knowledge.py` directly.
+Choose from existing/human-readable fact keys, or select **Other key**. Existing confirmed answers are reused and can only change after confirmation, with preserved revision history. Missing core intake questions are optional; skipping does not block product planning.
 
-The interactive menu selects or creates a project, displays its current workflow and prior answers, asks **one useful unanswered question at a time**, and lets you correct answers by friendly labels rather than passing canonical `KEY`, `VALUE`, or `REF` parameters. Answers are immediately persisted to `work/<project>/knowledge/facts/` with automatically generated source references. Explicit corrections preserve revision history; skipped questions stay deferred.
-
-The terminal menu is intentionally a **local workspace interface, not an autonomous AI chat**: domain research, proposals, planning and document synthesis are still performed by an agent following `skills/planning-orchestrator/SKILL.md` and `workflows/session.md`. The menu does not generate business plans by itself.
-
-For automated scripts and agents, the existing non-interactive commands remain supported: `make new PROJECT=my-product`, `make validate PROJECT=my-product`, and `python tools/knowledge.py --help`. Run `make help` for more.
+`python tools/interactive.py --help` lists all commands. The non-interactive `tools/knowledge.py` interface remains available for agents/CI. This CLI handles persistent knowledge, not autonomous product research or document synthesis.
 
 ## Deliverables
 

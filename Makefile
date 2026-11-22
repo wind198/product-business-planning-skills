@@ -4,33 +4,30 @@ PROJECT ?= demo-product
 OUTPUT ?= ./work
 WORKSPACE ?= $(OUTPUT)/$(PROJECT)
 PLATFORM ?= unspecified
-KEY ?=
-VALUE ?=
-REF ?=
 
 .DEFAULT_GOAL := help
 .PHONY: help start install test check new status validate schema-check vendor vendor-check resolve fact propose override
 
 help:
 	@echo 'Product & Business Planning Skills'
-	@echo '  make start                         Full interactive project menu'
-	@echo '  make fact PROJECT=name             Prompt for key and answer'
-	@echo '  make resolve PROJECT=name          Prompt for key and display saved answer'
-	@echo '  make propose PROJECT=name          Prompt for proposed key and value'
-	@echo '  make override PROJECT=name         Prompt for key, new answer and confirmation'
-	@echo '  make install                       Install dependencies'
-	@echo '  make vendor                        Install selected pinned upstream skills (online)'
-	@echo '  make vendor-check                  Verify upstream catalog structure'
-	@echo '  make new PROJECT=name              Create a project non-interactively'
-	@echo '  make status PROJECT=name           Print workflow/checkpoint for scripts'
-	@echo '  make validate PROJECT=name         Validate project YAML'
-	@echo '  make schema-check                  Validate framework templates and schemas'
-	@echo '  make test                          Run Python tests'
-	@echo '  make check                         Run all offline checks'
-	@echo 'For scripting, see tools/knowledge.py --help (advanced).'
+	@echo '  make start                           Guided project menu (Typer + Questionary)'
+	@echo '  make fact PROJECT=name               Select key and enter answer'
+	@echo '  make resolve PROJECT=name            Select key and view saved answer'
+	@echo '  make propose PROJECT=name            Select key and propose value'
+	@echo '  make override PROJECT=name           Confirm an answer correction'
+	@echo '  make install                         Install dependencies'
+	@echo '  make vendor                          Install pinned upstream skills (online)'
+	@echo '  make vendor-check                    Validate upstream catalog'
+	@echo '  make new PROJECT=name                Create project without prompts'
+	@echo '  make validate PROJECT=name           Validate project YAML'
+	@echo '  make check                           Run offline checks'
+	@echo '  python tools/interactive.py --help   Full CLI help'
 
 start:
-	$(PYTHON) tools/interactive.py --output '$(OUTPUT)'
+	$(PYTHON) tools/interactive.py start --output '$(OUTPUT)'
+
+resolve fact propose override:
+	$(PYTHON) tools/interactive.py $@ --project '$(PROJECT)' --output '$(OUTPUT)'
 
 install:
 	$(PIP) install -r requirements-dev.txt
@@ -46,9 +43,6 @@ new:
 
 status:
 	$(PYTHON) tools/knowledge.py --workspace '$(WORKSPACE)' status
-
-resolve fact propose override:
-	$(PYTHON) tools/interactive.py $@ --project '$(PROJECT)' --output '$(OUTPUT)'
 
 validate:
 	$(PYTHON) tools/knowledge.py --workspace '$(WORKSPACE)' validate
