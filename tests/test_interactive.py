@@ -12,7 +12,7 @@ from typer.testing import CliRunner
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from interactive import app, known, next_question, persist
+from interactive import app, known, next_question, persist, summary
 
 runner = CliRunner()
 
@@ -33,6 +33,17 @@ class InteractiveTests(unittest.TestCase):
         subprocess.run([sys.executable, str(ROOT / "tools" / "new_project.py"),
                         "--name", "demo", "--output", self.tmp.name],
                        capture_output=True, check=True)
+
+    def test_summary_displays_known_and_missing(self):
+        persist(self.ws, "product.idea", "A booking service", "fact")
+        with io.StringIO() as buffer, patch("interactive.console", __import__("rich.console", fromlist=["Console"]).Console(file=buffer, force_terminal=False, width=120)):
+            summary(self.ws)
+            output = buffer.getvalue()
+        self.assertIn("1 confirmed", output)
+        self.assertIn("Product idea: A booking service", output)
+        self.assertIn("Customer pain", output)
+        self.assertIn("Target customers", output)
+        self.assertNotIn("Still unknown: Product idea", output)
 
     def test_typer_help_and_commands(self):
         result = runner.invoke(app, ["--help"])
