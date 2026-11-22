@@ -8,21 +8,18 @@ Domain methodologies are selected from [Paweł Huryn's open-source PM Skills](ht
 
 Read `skills/planning-orchestrator/SKILL.md` and `workflows/session.md` to drive the agent. Until `make vendor` succeeds, the catalog is a manifest of upstream sources; it is **not** a local copy of their instructions.
 
-## Quick start
+## Quick start — interactive CLI
 
 ```bash
 make install
-make vendor                 # downloads pinned upstream source, requires network
-make new PROJECT=coffee-shop PLATFORM=web
-make status PROJECT=coffee-shop
-make resolve PROJECT=coffee-shop KEY=product.primary_problem
-make fact PROJECT=coffee-shop KEY=product.primary_problem VALUE='Customers cannot find quiet work spaces' REF=interview-001
-make propose PROJECT=coffee-shop KEY=product.customer_segment VALUE='Remote professionals' REF=agent-analysis-001
-make validate PROJECT=coffee-shop
-make test
+make start
 ```
 
-`PROJECT` defaults to `demo-product`; project folders are created under `./work`. Project workspaces are separate from this reusable framework. Before asking a question, **resolve existing answers** and check questions/proposals and sources. Confirmation only comes from an explicit user or authoritative source; an agent can propose customer segments, pricing models, features, GTM channels and business model alternatives without requesting blank-form answers.
+The interactive menu selects or creates a project, displays its current workflow and prior answers, asks **one useful unanswered question at a time**, and lets you correct answers by friendly labels rather than passing canonical `KEY`, `VALUE`, or `REF` parameters. Answers are immediately persisted to `work/<project>/knowledge/facts/` with automatically generated source references. Explicit corrections preserve revision history; skipped questions stay deferred.
+
+The terminal menu is intentionally a **local workspace interface, not an autonomous AI chat**: domain research, proposals, planning and document synthesis are still performed by an agent following `skills/planning-orchestrator/SKILL.md` and `workflows/session.md`. The menu does not generate business plans by itself.
+
+For automated scripts and agents, the existing non-interactive commands remain supported: `make new PROJECT=my-product`, `make validate PROJECT=my-product`, and `python tools/knowledge.py --help`. Run `make help` for more.
 
 ## Deliverables
 

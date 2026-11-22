@@ -9,23 +9,24 @@ VALUE ?=
 REF ?=
 
 .DEFAULT_GOAL := help
-.PHONY: help install test check new status validate schema-check vendor vendor-check resolve fact propose override
+.PHONY: help start install test check new status validate schema-check vendor vendor-check resolve fact propose override
 
 help:
 	@echo 'Product & Business Planning Skills'
+	@echo '  make start                         Interactive project planning (recommended)'
 	@echo '  make install                       Install dependencies'
 	@echo '  make vendor                        Install selected pinned upstream skills (online)'
 	@echo '  make vendor-check                  Verify upstream catalog structure'
-	@echo '  make new PROJECT=name              Create a persistent product workspace'
-	@echo '  make status PROJECT=name           Show current workflow/checkpoint'
-	@echo '  make resolve PROJECT=name KEY=x.y  Reuse known answer'
-	@echo '  make fact PROJECT=name KEY=x.y VALUE=... REF=...'
-	@echo '  make propose PROJECT=name KEY=x.y VALUE=... REF=...'
-	@echo '  make override PROJECT=name KEY=x.y VALUE=... REF=...'
-	@echo '  make validate PROJECT=name         Check YAML project state'
-	@echo '  make schema-check                  Check framework templates/schema'
+	@echo '  make new PROJECT=name              Create a project non-interactively'
+	@echo '  make status PROJECT=name           Print workflow/checkpoint for scripts'
+	@echo '  make validate PROJECT=name         Validate project YAML'
+	@echo '  make schema-check                  Validate framework templates and schemas'
 	@echo '  make test                          Run Python tests'
-	@echo '  make check                         Run offline checks and tests'
+	@echo '  make check                         Run all offline checks'
+	@echo 'For scripting, see tools/knowledge.py --help (advanced).'
+
+start:
+	$(PYTHON) tools/interactive.py --output '$(OUTPUT)'
 
 install:
 	$(PIP) install -r requirements-dev.txt

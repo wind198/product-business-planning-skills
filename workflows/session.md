@@ -9,3 +9,7 @@
 7. Draft or revise only relevant Markdown outputs. Review critical financial, privacy, product and market risks. Never auto-approve.
 
 Context budget: hot = current task/checkpoint; warm = relevant facts/decisions; cold = full transcripts, files, historical research. Do not replay entire chat to resume.
+
+## Terminal workspace entry point
+
+Human users should run `make start`, not memorize canonical keys or source IDs. The interactive CLI writes ordinary user-provided facts and checkpoints, asks one essential question at a time and reuses previous answers. Do not treat its small intake as the entire product discovery process: the AI agent must investigate, propose, and synthesize as described above. Agent/CI tooling may continue using the exact-key knowledge CLI directly.

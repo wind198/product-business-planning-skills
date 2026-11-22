@@ -28,3 +28,7 @@ Read `workflows/session.md`, `standards/evidence-policy.md`, project checkpoint 
 - Roadmap/GTM: `outcome-roadmap`, `gtm-strategy`, `gtm-motions`, `positioning`
 
 Human acceptance is necessary for material commercial commitments and product launch approval. Never equate a successful linter with a validated business.
+
+## Interactive terminal
+
+Recommend `make start` as the human-facing entry point for project selection, guided capture and corrections. The menu handles project knowledge only; it does not replace agent-led market research, opportunity discovery or plan authoring. Avoid asking the user to type canonical knowledge keys, source references, or raw YAML.
