@@ -63,7 +63,6 @@ class ReconcilerTests(unittest.TestCase):
         self.assertEqual(0, reconcile(self.ws)["new_events"])
         original = json.loads((self.ws / "state" / "knowledge-snapshot.json").read_text())
         self.assertEqual("Booking app", original["files"]["knowledge/facts/FACT-001.yaml"]["data"]["value"])
-        fact = yaml.safe_load((self.ws / "knowledge" / "facts" / "FACT-001.yaml").read_text()) if False else None
         # Recover with a valid edit, compared against the last valid revision.
         original_data = original["files"]["knowledge/facts/FACT-001.yaml"]["data"]
         original_data["value"] = "Recovered"
@@ -95,6 +94,15 @@ class ReconcilerTests(unittest.TestCase):
         self.assertEqual([], pending(self.ws))
         with self.assertRaises(ValueError):
             acknowledge(self.ws, ["not-an-event"])
+
+    def test_repeated_value_changes_generate_new_events(self):
+        path = self.write_fact()
+        for value in ("Other", "Booking app", "Other"):
+            entry = yaml.safe_load(path.read_text())
+            entry["value"] = value
+            path.write_text(yaml.safe_dump(entry))
+            self.assertEqual(1, reconcile(self.ws)["new_events"])
+        self.assertEqual(4, len(pending(self.ws)))
 
     def test_legacy_workspace_first_scan_is_baseline(self):
         self.write_fact()
