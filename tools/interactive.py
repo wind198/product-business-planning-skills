@@ -219,13 +219,87 @@ def run(output: Path, input_fn=input):
             print("Choose a displayed number.")
 
 
+
+def pick_key(workspace: Path, input_fn=input):
+    """Choose a known or new canonical key without requiring a CLI argument."""
+    existing = sorted({entry["key"] for _, entry in facts(workspace)
+                       if entry["status"] != "superseded"})
+    options = list(dict.fromkeys([key for key, _, _ in FIELDS] + existing))
+    names = [f"{FIELD_MAP.get(key, (key, ''))[0]} ({key})"
+             + (" [saved]" if current_fact(workspace, key) else "")
+             for key in options]
+    selected = choose(names + ["Enter another key"], "Choose information", input_fn)
+    if selected is None:
+        return None
+    if selected == len(options):
+        custom = ask("Canonical key (e.g. product.distribution_channel): ", input_fn)
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", custom):
+            print("Invalid key.")
+            return None
+        return custom
+    return options[selected]
+
+
+def command(workspace: Path, action: str, input_fn=input):
+    """Focused interactive fact/resolve/propose/override command."""
+    if not (workspace / "project.yaml").is_file():
+        raise ValueError(f"Project not found: {workspace}. Use make new PROJECT={workspace.name} or make start.")
+    key = pick_key(workspace, input_fn)
+    if key is None:
+        return
+    existing = current_fact(workspace, key)
+    label = FIELD_MAP.get(key, (key, ""))[0]
+    if action == "resolve":
+        if existing:
+            print(f"\n{label}: {existing['value']} [{existing['status']}; revision {existing['revision']}]")
+            print(f"Source: {existing['source']['ref']}")
+        else:
+            print(f"\nNo answer saved for {label}.")
+        return
+    if existing:
+        print(f"Current: {existing['value']} [{existing['status']}]")
+    value = ask(f"{label} value (Enter to cancel): ", input_fn)
+    if not value:
+        print("No changes.")
+        return
+    if action == "propose":
+        if existing:
+            print("An existing record cannot be overwritten by a proposal.")
+            return
+        source = "interactive-proposal-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        args = SimpleNamespace(key=key, value=value, status="proposed",
+                               source_ref=source, override=False, market=None, release=None)
+        put(workspace, args, read(workspace / "project.yaml")["project"])
+        return
+    if action == "override" and existing is None:
+        print("Nothing to override; creating a confirmed answer instead.")
+    if existing and (existing["value"] != value or existing["status"] != "confirmed"):
+        if ask("Confirm replacement or acceptance? [y/N]: ", input_fn).lower() not in ("y", "yes"):
+            print("Existing answer preserved.")
+            return
+        source = "interactive-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        args = SimpleNamespace(key=key, value=value, status="confirmed",
+                               source_ref=source, override=True, market=None, release=None)
+        put(workspace, args, read(workspace / "project.yaml")["project"])
+    else:
+        save_answer(workspace, key, value, input_fn)
+
 def main():
     parser = argparse.ArgumentParser(description="Interactive planning workspace; no KEY/VALUE/REF arguments needed.")
+    parser.add_argument("action", nargs="?", choices=("start", "fact", "resolve", "propose", "override"), default="start")
+    parser.add_argument("--project", help="Project slug for focused commands")
     parser.add_argument("--output", type=Path, default=Path("./work"))
     args = parser.parse_args()
     if not sys.stdin.isatty():
-        parser.error("interactive session requires a terminal; use tools/knowledge.py for scripts")
-    run(args.output.expanduser().resolve())
+        parser.error("interactive commands require a terminal; use tools/knowledge.py for scripts")
+    output = args.output.expanduser().resolve()
+    if args.action == "start":
+        run(output)
+    else:
+        project = args.project or ask("Project name: ")
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", project):
+            parser.error("invalid project slug")
+        command(output / project, args.action)
 
 
 if __name__ == "__main__":

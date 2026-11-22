@@ -60,10 +60,10 @@ def put(workspace,args,project):
     source={'type':'user' if args.status=='confirmed' else 'agent','ref':args.source_ref}
     if matches:
         path,obj=matches[0]
-        if obj['value']==args.value and obj['status']==args.status:
+        if obj['value']==args.value:
             print(json.dumps({'unchanged':True,'fact_id':obj['id']}));return
         if not args.override or args.status!='confirmed':
-            raise ValueError('existing answer or proposal differs; explicit user confirmation requires --override --status confirmed')
+            raise ValueError('different value already recorded; user correction requires --override --status confirmed')
         obj['history'].append({'revision':obj['revision'],'value':obj['value'],'source':obj['source']})
         obj.update(value=args.value,status='confirmed',revision=obj['revision']+1,source=source)
         action='explicit_user_override'

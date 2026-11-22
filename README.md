@@ -15,6 +15,17 @@ make install
 make start
 ```
 
+For a focused action, keep the short command and project name:
+
+```bash
+make fact PROJECT=coffee-shop
+make resolve PROJECT=coffee-shop
+make propose PROJECT=coffee-shop
+make override PROJECT=coffee-shop
+```
+
+Each command opens a brief interactive prompt to select an existing or common fact key and enter its value (when needed). Source IDs are generated automatically, and changes to confirmed answers require explicit confirmation. For custom keys, choose **Enter another key**. These focused commands require a terminal; non-interactive agents should call `tools/knowledge.py` directly.
+
 The interactive menu selects or creates a project, displays its current workflow and prior answers, asks **one useful unanswered question at a time**, and lets you correct answers by friendly labels rather than passing canonical `KEY`, `VALUE`, or `REF` parameters. Answers are immediately persisted to `work/<project>/knowledge/facts/` with automatically generated source references. Explicit corrections preserve revision history; skipped questions stay deferred.
 
 The terminal menu is intentionally a **local workspace interface, not an autonomous AI chat**: domain research, proposals, planning and document synthesis are still performed by an agent following `skills/planning-orchestrator/SKILL.md` and `workflows/session.md`. The menu does not generate business plans by itself.

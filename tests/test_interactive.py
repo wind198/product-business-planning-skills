@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from interactive import run, current_fact, deferred_keys, save_answer
+from interactive import run, current_fact, deferred_keys, save_answer, command
 
 
 class InteractiveTests(unittest.TestCase):
@@ -57,6 +57,35 @@ class InteractiveTests(unittest.TestCase):
             fact = current_fact(ws, "product.target_customer")
             self.assertEqual("confirmed", fact["status"])
             self.assertEqual(2, fact["revision"])
+
+    def test_short_commands_prompt_and_reuse(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run([sys.executable, str(ROOT / "tools/new_project.py"), "--name", "p", "--output", tmp],
+                           check=True, capture_output=True)
+            ws = Path(tmp) / "p"
+            with contextlib.redirect_stdout(io.StringIO()):
+                command(ws, "fact", self.responses("1", "A small business platform"))
+                command(ws, "resolve", self.responses("1"))
+                command(ws, "override", self.responses("1", "A revised platform", "n"))
+            self.assertEqual("A small business platform", current_fact(ws, "product.idea")["value"])
+            with contextlib.redirect_stdout(io.StringIO()):
+                command(ws, "override", self.responses("1", "A revised platform", "y"))
+            fact = current_fact(ws, "product.idea")
+            self.assertEqual("A revised platform", fact["value"])
+            self.assertEqual(2, fact["revision"])
+
+    def test_focused_custom_key_and_proposal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run([sys.executable, str(ROOT / "tools/new_project.py"), "--name", "p", "--output", tmp],
+                           check=True, capture_output=True)
+            ws = Path(tmp) / "p"
+            with contextlib.redirect_stdout(io.StringIO()):
+                command(ws, "propose", self.responses("7", "pricing.model", "usage-based"))
+            proposal = current_fact(ws, "pricing.model")
+            self.assertEqual("proposed", proposal["status"])
+            with contextlib.redirect_stdout(io.StringIO()):
+                command(ws, "fact", self.responses("8", "usage-based", "y"))
+            self.assertEqual("confirmed", current_fact(ws, "pricing.model")["status"])
 
     def test_defer_avoids_reasking(self):
         with tempfile.TemporaryDirectory() as tmp:

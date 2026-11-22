@@ -13,7 +13,11 @@ REF ?=
 
 help:
 	@echo 'Product & Business Planning Skills'
-	@echo '  make start                         Interactive project planning (recommended)'
+	@echo '  make start                         Full interactive project menu'
+	@echo '  make fact PROJECT=name             Prompt for key and answer'
+	@echo '  make resolve PROJECT=name          Prompt for key and display saved answer'
+	@echo '  make propose PROJECT=name          Prompt for proposed key and value'
+	@echo '  make override PROJECT=name         Prompt for key, new answer and confirmation'
 	@echo '  make install                       Install dependencies'
 	@echo '  make vendor                        Install selected pinned upstream skills (online)'
 	@echo '  make vendor-check                  Verify upstream catalog structure'
@@ -43,13 +47,8 @@ new:
 status:
 	$(PYTHON) tools/knowledge.py --workspace '$(WORKSPACE)' status
 
-resolve:
-	@test -n '$(KEY)' || (echo 'Required: KEY=canonical.key' >&2; exit 2)
-	$(PYTHON) tools/knowledge.py --workspace '$(WORKSPACE)' resolve '$(KEY)'
-
-fact propose override:
-	@test -n '$(KEY)' && test -n '$(VALUE)' && test -n '$(REF)' || (echo 'Required: KEY=... VALUE=... REF=...' >&2; exit 2)
-	$(PYTHON) tools/knowledge.py --workspace '$(WORKSPACE)' put --key '$(KEY)' --value '$(VALUE)' --source-ref '$(REF)' $(if $(filter propose,$@),--status proposed,--status confirmed) $(if $(filter override,$@),--override,)
+resolve fact propose override:
+	$(PYTHON) tools/interactive.py $@ --project '$(PROJECT)' --output '$(OUTPUT)'
 
 validate:
 	$(PYTHON) tools/knowledge.py --workspace '$(WORKSPACE)' validate
