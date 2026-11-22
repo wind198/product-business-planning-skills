@@ -11,8 +11,8 @@ PLATFORM ?= unspecified
 help:
 	@echo 'Product & Business Planning Skills'
 	@echo '  make start                           Project menu + persistent guided discovery'
-	@echo '  make discover PROJECT=name           Continuous discovery with input status list
-	@echo '  make fact PROJECT=name               Select key and enter answer''
+	@echo '  make discover PROJECT=name           Continuous discovery with input status list'
+	@echo '  make fact PROJECT=name               Select key and enter answer'
 	@echo '  make resolve PROJECT=name            Select key and view saved answer'
 	@echo '  make propose PROJECT=name            Select key and propose value'
 	@echo '  make override PROJECT=name           Confirm an answer correction'
