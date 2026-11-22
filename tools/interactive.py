@@ -55,14 +55,18 @@ def known(workspace: Path, key: str) -> dict | None:
 def pick_key(workspace: Path) -> str | None:
     existing = {item["key"] for _, item in facts(workspace) if item["status"] != "superseded"}
     options = list(dict.fromkeys([*FIELDS, *sorted(existing)]))
-    labels = {f"{FIELDS.get(key, key)} · {key}" + (" [saved]" if key in existing else ""): key
-              for key in options}
-    labels["Other key…"] = None
-    selection = questionary.select("Which information?", choices=list(labels)).ask()
-    if selection is None:
-        return None
-    key = labels[selection]
+    choices = [
+        questionary.Choice(
+            title=f"{FIELDS.get(key, key)} · {key}" + (" [saved]" if key in existing else ""),
+            value=key,
+        )
+        for key in options
+    ]
+    choices.append(questionary.Choice(title="Other key…", value="__custom__"))
+    key = questionary.select("Which information?", choices=choices).ask()
     if key is None:
+        return None
+    if key == "__custom__":
         key = questionary.text("Canonical key (e.g. pricing.model):").ask()
         if not key:
             return None
