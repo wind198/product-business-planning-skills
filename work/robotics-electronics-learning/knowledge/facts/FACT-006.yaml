@@ -1,0 +1,15 @@
+{
+  "id": "FACT-006",
+  "key": "product.delivery",
+  "value": "Self-paced browser-first learning, no initial physical hardware required",
+  "status": "proposed",
+  "scope": {
+    "project": "robotics-electronics-learning"
+  },
+  "revision": 1,
+  "source": {
+    "type": "discussion",
+    "ref": "history/2026-11-27-discovery.md"
+  },
+  "history": []
+}

@@ -1,0 +1,15 @@
+{
+  "id": "FACT-004",
+  "key": "product.differentiation",
+  "value": "Education-first: teaching, homework and projects rather than simulation alone",
+  "status": "confirmed",
+  "scope": {
+    "project": "robotics-electronics-learning"
+  },
+  "revision": 1,
+  "source": {
+    "type": "user",
+    "ref": "history/2026-11-27-discovery.md"
+  },
+  "history": []
+}

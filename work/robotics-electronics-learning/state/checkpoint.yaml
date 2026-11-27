@@ -1,0 +1,38 @@
+{
+  "current_focus": "market_validation",
+  "completed": [
+    "product_direction_approved",
+    "idea_brief_drafted",
+    "problem_hypotheses_drafted",
+    "segment_candidates_proposed",
+    "value_proposition_proposed",
+    "validation_experiments_proposed"
+  ],
+  "known_keys": [
+    "product.domain",
+    "product.method",
+    "product.audience",
+    "product.differentiation",
+    "product.outcome",
+    "product.delivery",
+    "market.initial_segment",
+    "market.geography",
+    "business.model",
+    "product.mvp_scope",
+    "product.curriculum",
+    "product.assessment",
+    "technology.candidates"
+  ],
+  "open_questions": [
+    "Select initial audience",
+    "Select initial geography and language",
+    "Select business objective"
+  ],
+  "next_actions": [
+    "resolve_initial_segment_geography_and_business_objective",
+    "verify_competitor_evidence",
+    "validate_problem_hypotheses",
+    "define_mvp_after_review"
+  ],
+  "last_source_revision": "4cbcf7638aa7335ec789cecf39ebd3d92d8227fd"
+}

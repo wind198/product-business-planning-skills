@@ -1,0 +1,15 @@
+{
+  "id": "FACT-013",
+  "key": "technology.candidates",
+  "value": "Next.js, NestJS, PostgreSQL, MDX, Three.js, Rapier, CircuitJS/ngspice, Wokwi/QEMU, ESP-IDF, ROS2, Gazebo/Isaac Sim, SimReady/OpenUSD",
+  "status": "proposed",
+  "scope": {
+    "project": "robotics-electronics-learning"
+  },
+  "revision": 1,
+  "source": {
+    "type": "discussion",
+    "ref": "history/2026-11-27-discovery.md"
+  },
+  "history": []
+}

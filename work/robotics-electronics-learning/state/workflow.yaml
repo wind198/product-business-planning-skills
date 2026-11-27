@@ -1,0 +1,16 @@
+{
+  "workflow": "idea-to-mvp",
+  "phase": "discovery",
+  "status": "in_progress",
+  "active_tasks": [
+    "market_validation",
+    "customer_segment_selection"
+  ],
+  "blocked_by": [],
+  "needs_review": [
+    "competitor_claims",
+    "value_proposition",
+    "validation_experiments"
+  ],
+  "next_action": "resolve_initial_segment_geography_and_business_objective"
+}

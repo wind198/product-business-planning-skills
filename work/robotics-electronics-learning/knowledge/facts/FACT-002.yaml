@@ -1,0 +1,15 @@
+{
+  "id": "FACT-002",
+  "key": "product.method",
+  "value": "Simulation-based learning",
+  "status": "confirmed",
+  "scope": {
+    "project": "robotics-electronics-learning"
+  },
+  "revision": 1,
+  "source": {
+    "type": "user",
+    "ref": "history/2026-11-27-discovery.md"
+  },
+  "history": []
+}

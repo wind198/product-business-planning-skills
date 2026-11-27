@@ -1,0 +1,15 @@
+{
+  "id": "FACT-003",
+  "key": "product.audience",
+  "value": "Learners without relevant technical backgrounds, including people from other disciplines",
+  "status": "confirmed",
+  "scope": {
+    "project": "robotics-electronics-learning"
+  },
+  "revision": 1,
+  "source": {
+    "type": "user",
+    "ref": "history/2026-11-27-discovery.md"
+  },
+  "history": []
+}

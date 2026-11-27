@@ -1,0 +1,15 @@
+{
+  "id": "FACT-011",
+  "key": "product.curriculum",
+  "value": "Competency graph; just-in-time mathematics and physics; concept, electronics, firmware and robotics labs",
+  "status": "proposed",
+  "scope": {
+    "project": "robotics-electronics-learning"
+  },
+  "revision": 1,
+  "source": {
+    "type": "discussion",
+    "ref": "history/2026-11-27-discovery.md"
+  },
+  "history": []
+}

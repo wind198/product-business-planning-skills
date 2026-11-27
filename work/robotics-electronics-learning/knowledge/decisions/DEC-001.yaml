@@ -1,0 +1,26 @@
+{
+  "id": "DEC-001",
+  "title": "Approve education-first robotics and electronics product direction",
+  "status": "accepted",
+  "alternatives": [
+    {
+      "name": "Education-first simulation-based learning",
+      "tradeoffs": "Requires substantial instructional design and assessment investment"
+    },
+    {
+      "name": "Simulator-first tooling",
+      "tradeoffs": "Does not prioritize the approved teaching, homework and project goals"
+    }
+  ],
+  "preferred": "Education-first simulation-based learning",
+  "authorized_by": "user",
+  "source_refs": [
+    "history/2026-11-27-discovery.md"
+  ],
+  "affected_ids": [
+    "FACT-001",
+    "FACT-002",
+    "FACT-003",
+    "FACT-004"
+  ]
+}

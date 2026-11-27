@@ -1,0 +1,15 @@
+{
+  "id": "FACT-012",
+  "key": "product.assessment",
+  "value": "Behavioral assertions, circuit and code feedback, scenario replay, progressive hints",
+  "status": "proposed",
+  "scope": {
+    "project": "robotics-electronics-learning"
+  },
+  "revision": 1,
+  "source": {
+    "type": "discussion",
+    "ref": "history/2026-11-27-discovery.md"
+  },
+  "history": []
+}
