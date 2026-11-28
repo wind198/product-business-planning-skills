@@ -13,6 +13,8 @@ import questionary
 import typer
 from rich.console import Console
 from rich.table import Table
+import yaml
+from intake_catalog import GROUPS, ALL_FIELDS, BY_KEY
 
 from knowledge import facts, put, read, resolve, scope_for
 
@@ -175,14 +177,132 @@ def next_question(workspace: Path) -> None:
         persist(workspace, key, answer, "fact")
 
 
+def checkpoint_keys(workspace: Path) -> set[str]:
+    return set(read(workspace / "state" / "checkpoint.yaml").get("deferred_keys", []))
+
+
+def defer(workspace: Path, key: str) -> None:
+    path = workspace / "state" / "checkpoint.yaml"
+    checkpoint = read(path)
+    keys = checkpoint.setdefault("deferred_keys", [])
+    if key not in keys:
+        keys.append(key)
+        path.write_text(yaml.safe_dump(checkpoint, sort_keys=False, allow_unicode=True), encoding="utf-8")
+
+
+def input_keys(workspace: Path) -> list[str]:
+    """Include previously saved custom/agent question keys in the same status list."""
+    others = sorted({item["key"] for _, item in facts(workspace) if item["key"] not in BY_KEY})
+    questions = (workspace / "knowledge" / "questions").glob("*.yaml")
+    for path in questions:
+        entry = read(path)
+        if entry.get("status") == "open" and entry.get("key") and entry["key"] not in BY_KEY:
+            others.append(entry["key"])
+    return [*BY_KEY, *sorted(set(others))]
+
+
+def input_status(workspace: Path, key: str) -> str:
+    entry = known(workspace, key)
+    if entry is not None:
+        return "confirmed" if entry["status"] == "confirmed" else entry["status"]
+    return "deferred" if key in checkpoint_keys(workspace) else "unanswered"
+
+
+def next_discovery_key(workspace: Path) -> str | None:
+    deferred = checkpoint_keys(workspace)
+    for key in input_keys(workspace):
+        if key not in deferred and input_status(workspace, key) != "confirmed":
+            return key
+    return None
+
+
+def input_label(key: str) -> str:
+    return BY_KEY[key].label if key in BY_KEY else FIELDS.get(key, key)
+
+
+def input_overview(workspace: Path) -> str | None:
+    """Display every collected, missing, deferred or proposed item; stay in discovery."""
+    keys = input_keys(workspace)
+    statuses = {key: input_status(workspace, key) for key in keys}
+    confirmed = sum(v == "confirmed" for v in statuses.values())
+    deferred = sum(v == "deferred" for v in statuses.values())
+    console.print(f"\\n[bold]{workspace.name} · Discovery inputs[/bold] — "
+                  f"{confirmed}/{len(keys)} confirmed, {deferred} deferred, "
+                  f"{len(keys) - confirmed - deferred} other")
+    choices = []
+    if next_discovery_key(workspace):
+        choices.append(questionary.Choice("Continue next unanswered input", value="__next__"))
+    for topic, fields in GROUPS.items():
+        choices.append(questionary.Separator(topic))
+        for field in fields:
+            entry = known(workspace, field.key)
+            current = str(entry["value"]).replace("\\n", " ")[:50] if entry else "—"
+            choices.append(questionary.Choice(
+                f"[{statuses[field.key]}] {field.label}: {current}", value=field.key))
+    extra = [key for key in keys if key not in BY_KEY]
+    if extra:
+        choices.append(questionary.Separator("Other saved / agent-requested information"))
+        for key in extra:
+            entry = known(workspace, key)
+            current = str(entry["value"]).replace("\\n", " ")[:50] if entry else "—"
+            choices.append(questionary.Choice(
+                f"[{statuses[key]}] {input_label(key)}: {current}", value=key))
+    choices.append(questionary.Choice("Exit discovery", value="__exit__"))
+    return questionary.select("Choose an input to review or continue", choices=choices).ask()
+
+
+def ask_input(workspace: Path, key: str) -> None:
+    entry = known(workspace, key)
+    if entry is not None:
+        console.print(f"Current {input_label(key)}: {entry['value']} [{entry['status']}]")
+    field = BY_KEY.get(key)
+    if field and field.hint:
+        console.print(f"[dim]{field.hint}[/dim]")
+    answer = questionary.text(f"{input_label(key)} (Enter or /skip to defer):").ask()
+    if answer is None:
+        return
+    if not answer.strip() or answer.strip() == "/skip":
+        defer(workspace, key)
+        console.print(f"[dim]Deferred {input_label(key)}. It remains unresolved.[/dim]")
+        return
+    persist(workspace, key, answer.strip(), "fact")
+    # An answer accepted by the user takes precedence over an earlier defer;
+    # the fact remains authoritative even if the checkpoint still lists the key.
+
+
+def discovery(workspace: Path, *, guided: bool = True) -> None:
+    """Continuous workflow. Only an explicit exit returns to the project menu."""
+    while True:
+        if guided:
+            key = next_discovery_key(workspace)
+            if key is not None:
+                before = input_status(workspace, key)
+                ask_input(workspace, key)
+                after = input_status(workspace, key)
+                if before != after:
+                    continue
+            guided = False
+        choice = input_overview(workspace)
+        if choice == "__exit__":
+            return
+        if choice == "__next__":
+            guided = True
+            continue
+        if choice is None:
+            # Cancelled selection stays in discovery rather than returning to main.
+            continue
+        ask_input(workspace, choice)
+        # After manual selection, show the updated status overview again.
+
+
 def dashboard(workspace: Path) -> None:
     table = Table(title=f"Known information · {workspace.name}")
-    table.add_column("Key")
-    table.add_column("Value")
+    table.add_column("Information")
+    table.add_column("Saved value")
     table.add_column("Status")
-    for _, item in facts(workspace):
-        if item["status"] != "superseded":
-            table.add_row(FIELDS.get(item["key"], item["key"]), str(item["value"]), item["status"])
+    for key in input_keys(workspace):
+        entry = known(workspace, key)
+        table.add_row(input_label(key), str(entry["value"]) if entry else "—", input_status(workspace, key))
     console.print(table)
 
 
@@ -191,6 +311,8 @@ def start(output: Path = typer.Option(Path("./work"), help="Project workspaces d
     """Open the guided project workspace."""
     current = project_picker(output)
     while current is not None:
+        confirmed = sum(input_status(current, key) == "confirmed" for key in input_keys(current))
+        console.print(f"\\n[bold]{current.name}[/bold] · {confirmed}/{len(input_keys(current))} discovery inputs confirmed")
         choice = questionary.select(
             f"{current.name} — what next?",
             choices=["Continue discovery", "Review answers", "Add or correct fact",
@@ -201,13 +323,20 @@ def start(output: Path = typer.Option(Path("./work"), help="Project workspaces d
         if choice == "Switch project":
             current = project_picker(output)
         elif choice == "Continue discovery":
-            next_question(current)
+            discovery(current)
         elif choice == "Review answers":
             dashboard(current)
         else:
             action = {"Add or correct fact": "fact", "Propose an idea": "propose",
                       "Find an answer": "resolve"}[choice]
             focused(action, current.name, output)
+
+
+@app.command()
+def discover(project: str = typer.Option(..., help="Existing project slug"),
+             output: Path = typer.Option(Path("./work"))) -> None:
+    """Continue a persistent guided discovery session."""
+    discovery(workspace_for(project, output))
 
 
 @app.command()

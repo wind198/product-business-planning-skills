@@ -37,7 +37,7 @@ class InteractiveTests(unittest.TestCase):
     def test_typer_help_and_commands(self):
         result = runner.invoke(app, ["--help"])
         self.assertEqual(0, result.exit_code, result.output)
-        for command in ("start", "fact", "resolve", "propose", "override"):
+        for command in ("start", "discover", "fact", "resolve", "propose", "override"):
             self.assertIn(command, result.output)
 
     def test_prompted_fact_and_lookup(self):
@@ -77,6 +77,74 @@ class InteractiveTests(unittest.TestCase):
             next_question(self.ws)
         self.assertIn("Customer pain", prompt.call_args[0][0])
         self.assertEqual("Bad scheduling", known(self.ws, "product.primary_problem")["value"])
+
+
+    def test_discovery_advances_after_each_answer_and_stays_on_status(self):
+        from interactive import discovery, input_status
+        from intake_catalog import BY_KEY
+        with patch("interactive.questionary.text", side_effect=[
+            Prompt("New idea"), Prompt("Hard to discover options"), Prompt("Founders"),
+        ]), patch("interactive.questionary.select", return_value=Prompt("__exit__")) as menu:
+            # Only 3 fields are enabled for this flow; the rest are deliberately deferred.
+            from interactive import defer
+            for key in BY_KEY:
+                if key not in ("product.idea", "product.primary_problem", "product.target_customer"):
+                    defer(self.ws, key)
+            discovery(self.ws)
+        self.assertEqual("confirmed", input_status(self.ws, "product.idea"))
+        self.assertEqual("confirmed", input_status(self.ws, "product.primary_problem"))
+        self.assertEqual("confirmed", input_status(self.ws, "product.target_customer"))
+        menu.assert_called_once()
+        options = menu.call_args.kwargs["choices"]
+        self.assertTrue(any(getattr(option, "value", None) == "product.idea" for option in options))
+        self.assertTrue(any(getattr(option, "value", None) == "__exit__" for option in options))
+
+    def test_all_inputs_complete_still_shows_editable_status_list(self):
+        from interactive import discovery, defer
+        from intake_catalog import BY_KEY
+        for key in BY_KEY:
+            defer(self.ws, key)
+        with patch("interactive.questionary.select", side_effect=[
+            Prompt("product.idea"), Prompt("__exit__"),
+        ]) as menus, patch("interactive.questionary.text", return_value=Prompt("Updated idea")):
+            discovery(self.ws)
+        self.assertEqual("Updated idea", known(self.ws, "product.idea")["value"])
+        self.assertEqual(2, menus.call_count)
+        self.assertTrue(any(getattr(option, "value", None) == "product.idea"
+                            for option in menus.call_args_list[0].kwargs["choices"]))
+
+    def test_next_discovery_skips_saved_and_deferred(self):
+        from interactive import next_discovery_key, defer
+        persist(self.ws, "product.idea", "Existing", "fact")
+        defer(self.ws, "product.primary_problem")
+        self.assertEqual("product.target_customer", next_discovery_key(self.ws))
+
+    def test_direct_yaml_edit_reflected_in_status_view(self):
+        from interactive import input_status, input_overview
+        from pathlib import Path
+        import yaml
+        persist(self.ws, "product.idea", "Original", "fact")
+        path = next((self.ws / "knowledge" / "facts").glob("*.yaml"))
+        fact = yaml.safe_load(path.read_text())
+        fact["value"] = "Manually updated"
+        path.write_text(yaml.safe_dump(fact))
+        with patch("interactive.questionary.select", return_value=Prompt("__exit__")) as menu:
+            input_overview(self.ws)
+        titles = [getattr(choice, "title", str(choice)) for choice in menu.call_args.kwargs["choices"]]
+        self.assertTrue(any("Manually updated" in title for title in titles))
+
+    def test_direct_discover_command_and_skip_do_not_return_to_main_menu(self):
+        from interactive import defer
+        from intake_catalog import BY_KEY
+        for key in BY_KEY:
+            if key != "product.idea":
+                defer(self.ws, key)
+        with patch("interactive.questionary.text", return_value=Prompt("/skip")), \
+             patch("interactive.questionary.select", return_value=Prompt("__exit__")) as select:
+            result = runner.invoke(app, ["discover", "--project", "demo", "--output", self.tmp.name])
+        self.assertEqual(0, result.exit_code, result.output)
+        select.assert_called_once()
+        self.assertIsNone(known(self.ws, "product.idea"))
 
     def test_custom_key_and_proposal_no_overwrite(self):
         with patch("interactive.questionary.select", return_value=Prompt("__custom__")), \
